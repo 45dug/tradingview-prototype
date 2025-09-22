@@ -5,20 +5,13 @@ from datetime import datetime, timedelta
 
 # ===== TRADINGVIEW COMPLETE PROTOTYPE =====
 # ===== PAGE CONFIG =====
-st.set_page_config(
-    page_title="TradingView - Where the world does markets",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
 # ===== TRADINGVIEW CSS STYLING =====
 st.markdown("""
 <style>
     /* Main TradingView Dark Theme */
     .main { 
-        background-color: #131722; 
-        color: #d1d4dc; 
-        font-family: 'Inter', sans-serif;
+        background-color: #131722 !important; 
+        color: #d1d4dc !important; 
     }
     
     /* Hero Section */
@@ -26,12 +19,12 @@ st.markdown("""
         background: linear-gradient(135deg, #000000 0%, #131722 100%);
         padding: 80px 20px;
         text-align: center;
-        border-radius: 0 0 20px 20px;
+        border-radius: 0px;
         margin-bottom: 40px;
     }
     
     .hero-title {
-        font-size: 4rem;
+        font-size: 3.5rem;
         font-weight: 800;
         background: linear-gradient(135deg, #2962ff 0%, #00bcd4 100%);
         -webkit-background-clip: text;
@@ -40,79 +33,50 @@ st.markdown("""
     }
     
     .hero-subtitle {
-        font-size: 1.5rem;
+        font-size: 1.3rem;
         opacity: 0.9;
-        margin-bottom: 40px;
-    }
-    
-    .cta-button {
-        background: linear-gradient(135deg, #2962ff 0%, #00bcd4 100%);
-        border: none;
-        padding: 15px 40px;
-        font-size: 1.2rem;
-        border-radius: 30px;
-        color: white;
-        font-weight: 600;
-        cursor: pointer;
-    }
-    
-    /* Sidebar Styling */
-    .sidebar .sidebar-content {
-        background-color: #1e222d;
-        color: #d1d4dc;
+        margin-bottom: 30px;
+        color: #d1d4dc !important;
     }
     
     /* Cards and Containers */
     .market-card {
         background-color: #1e222d;
-        padding: 20px;
-        border-radius: 12px;
-        margin: 10px 0;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 8px 0;
         border-left: 4px solid #2962ff;
     }
     
     .feature-card {
         background-color: #1e222d;
-        padding: 25px;
-        border-radius: 15px;
+        padding: 20px;
+        border-radius: 10px;
         text-align: center;
-        margin: 10px;
-    }
-    
-    /* Watchlist Items */
-    .watchlist-item {
-        padding: 12px;
-        margin: 6px 0;
-        border-radius: 6px;
-        background-color: #2a2e39;
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-    
-    .watchlist-item:hover {
-        background-color: #3a3e49;
-        transform: translateX(5px);
+        margin: 8px;
+        height: 150px;
     }
     
     /* Colors */
-    .green { color: #26a69a; font-weight: 600; }
-    .red { color: #ef5350; font-weight: 600; }
-    .blue { color: #2962ff; }
+    .green { color: #26a69a !important; font-weight: 600; }
+    .red { color: #ef5350 !important; font-weight: 600; }
     
-    /* Buttons */
-    .stButton>button {
-        background-color: #2962ff;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        padding: 10px 20px;
-        font-weight: 500;
-        transition: all 0.3s ease;
+    /* Center align text */
+    .centered-text {
+        text-align: center;
+        color: #d1d4dc !important;
     }
     
-    .stButton>button:hover {
-        background-color: #1e53e5;
-        transform: translateY(-2px);
+    /* Fix metric colors */
+    .stMetric {
+        background-color: #1e222d;
+        padding: 10px;
+        border-radius: 8px;
+    }
+    
+    /* Ensure text visibility */
+    h1, h2, h3, h4, h5, h6, p, div, span {
+        color: #d1d4dc !important;
     }
 </style>
 """, unsafe_allow_html=True)
