@@ -150,25 +150,38 @@ else:
     st.line_chart(st.session_state.stock_data.set_index('timestamp'))
 
 # Trading controls
+# Replace the trading panel section with this:
+st.markdown('<div class="trading-panel">', unsafe_allow_html=True)
 st.subheader("🎯 Trading Panel")
 
-col1, col2, col3, col4 = st.columns(4)
+# Trading controls in a more compact layout
+col1, col2, col3, col4, col5, col6 = st.columns([1,1,1,1,1,1])
 
 with col1:
-    if st.button("▶️ Start Live" if not st.session_state.is_live else "⏸️ Pause Live"):
+    live_status = "⏸️" if st.session_state.is_live else "▶️"
+    if st.button(live_status, help="Live/Simulation Mode"):
         st.session_state.is_live = not st.session_state.is_live
 
 with col2:
-    if st.button("🔄 Refresh Data"):
+    if st.button("🔄", help="Refresh Data"):
         st.session_state.stock_data = generate_stock_data(st.session_state.current_stock)
         st.rerun()
 
 with col3:
-    order_type = st.selectbox("Order Type", ["Market", "Limit", "Stop"])
+    order_type = st.selectbox("Type", ["Market", "Limit"], label_visibility="collapsed")
 
 with col4:
-    quantity = st.number_input("Quantity", min_value=1, value=100)
+    quantity = st.number_input("Qty", min_value=1, value=100, label_visibility="collapsed")
 
+with col5:
+    if st.button("🟢 BUY", type="primary", use_container_width=True):
+        st.success(f"✅ BUY {quantity} {st.session_state.current_stock} @ ${current_price:.2f}")
+
+with col6:
+    if st.button("🔴 SELL", type="secondary", use_container_width=True):
+        st.error(f"✅ SELL {quantity} {st.session_state.current_stock} @ ${current_price:.2f}")
+
+st.markdown('</div>', unsafe_allow_html=True)
 # Buy/Sell buttons
 col5, col6 = st.columns(2)
 with col5:
