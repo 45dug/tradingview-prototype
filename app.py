@@ -10,19 +10,13 @@ st.set_page_config(
     layout="wide"
 )
 
-# Simple CSS for professional look
+# CSS for professional look
 st.markdown("""
 <style>
     .main { background-color: #f8f9fa; }
     .metric-card { background: white; padding: 15px; border-radius: 8px; margin: 5px; border-left: 4px solid #2962ff; }
-    .watchlist-item { padding: 10px; margin: 5px 0; border-radius: 5px; background: white; cursor: pointer; }
-    .watchlist-item:hover { background: #e3f2fd; }
-</style>
-""", unsafe_allow_html=True)
-# Add this to your existing CSS section:
-st.markdown("""
-<style>
-    /* Improve chart appearance */
+    
+    /* Improved chart appearance */
     .stLineChart {
         background-color: white;
         border-radius: 10px;
@@ -88,18 +82,32 @@ with st.sidebar:
     st.subheader("📍 Watchlist")
     
     watchlist = {
-        "AAPL": {"name": "Apple Inc.", "price": 182.35, "change": +1.25},
-        "TSLA": {"name": "Tesla Inc.", "price": 248.90, "change": +5.60},
-        "MSFT": {"name": "Microsoft", "price": 421.80, "change": -2.30},
-        "BTCUSD": {"name": "Bitcoin", "price": 65123.45, "change": +1234.56}
+        "AAPL": {"name": "Apple Inc.", "price": 182.35, "change": +1.25, "change_pct": +0.69},
+        "TSLA": {"name": "Tesla Inc.", "price": 248.90, "change": +5.60, "change_pct": +2.30},
+        "MSFT": {"name": "Microsoft", "price": 421.80, "change": -2.30, "change_pct": -0.54},
+        "BTCUSD": {"name": "Bitcoin", "price": 65123.45, "change": +1234.56, "change_pct": +1.93}
     }
     
     for symbol, data in watchlist.items():
-        change_color = "🟢" if data["change"] >= 0 else "🔴"
-        change_text = f"+{data['change']}" if data["change"] >= 0 else f"{data['change']}"
+        change_color = "color: #26a69a;" if data["change"] >= 0 else "color: #ef5350;"
+        change_icon = "▲" if data["change"] >= 0 else "▼"
         
-        if st.button(f"{change_color} {symbol}: ${data['price']} ({change_text})", 
-                    key=f"btn_{symbol}", use_container_width=True):
+        st.markdown(f"""
+        <div class="watchlist-item" onclick="this.style.background='#f0f7ff'">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong>{symbol}</strong><br>
+                    <small>{data['name']}</small>
+                </div>
+                <div style="text-align: right;">
+                    <div>${data['price']:.2f}</div>
+                    <div style="{change_color}">{change_icon} {data['change_pct']:.2f}%</div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        if st.button(f"View {symbol}", key=f"btn_{symbol}", use_container_width=True):
             st.session_state.current_stock = symbol
             st.session_state.stock_data = generate_stock_data(symbol)
             st.rerun()
@@ -109,6 +117,14 @@ with st.sidebar:
     st.subheader("⚙️ Chart Controls")
     chart_type = st.radio("Chart Type", ["Line", "Area"], horizontal=True)
     timeframe = st.select_slider("Timeframe", options=["1D", "1W", "1M", "3M", "1Y"])
+    
+    st.markdown("---")
+    
+    st.subheader("📈 Technical Indicators")
+    indicators = ["Moving Average", "RSI", "MACD", "Bollinger Bands", "Volume"]
+    for indicator in indicators:
+        if st.checkbox(f"• {indicator}"):
+            st.slider(f"{indicator} Period", 5, 50, 14, key=f"slider_{indicator}")
     
     st.markdown("---")
     
@@ -144,13 +160,26 @@ with col4:
 
 # Price chart
 st.subheader("Price Chart")
-if chart_type == "Area":
-    st.area_chart(st.session_state.stock_data.set_index('timestamp'))
-else:
-    st.line_chart(st.session_state.stock_data.set_index('timestamp'))
 
-# Trading controls
-# Replace the trading panel section with this:
+# Add timeframe buttons above the chart
+timeframes = ["1D", "1W", "1M", "3M", "1Y", "All"]
+cols = st.columns(6)
+for i, tf in enumerate(timeframes):
+    with cols[i]:
+        if st.button(tf, use_container_width=True):
+            st.info(f"Switched to {tf} view")
+
+# Display the chart with better styling
+chart_data = st.session_state.stock_data.set_index('timestamp')
+if chart_type == "Area":
+    st.area_chart(chart_data, height=400)
+else:
+    st.line_chart(chart_data, height=400)
+
+# Add price levels below the chart
+st.caption(f"📊 Chart showing {len(chart_data)} data points | Latest: ${current_price:.2f}")
+
+# Trading panel
 st.markdown('<div class="trading-panel">', unsafe_allow_html=True)
 st.subheader("🎯 Trading Panel")
 
@@ -182,14 +211,6 @@ with col6:
         st.error(f"✅ SELL {quantity} {st.session_state.current_stock} @ ${current_price:.2f}")
 
 st.markdown('</div>', unsafe_allow_html=True)
-# Buy/Sell buttons
-col5, col6 = st.columns(2)
-with col5:
-    if st.button("🟢 BUY NOW", type="primary", use_container_width=True):
-        st.success(f"✅ Market BUY order for {quantity} {st.session_state.current_stock} at ${current_price:.2f}")
-with col6:
-    if st.button("🔴 SELL NOW", type="secondary", use_container_width=True):
-        st.error(f"✅ Market SELL order for {quantity} {st.session_state.current_stock} at ${current_price:.2f}")
 
 # Live data simulation
 if st.session_state.is_live:
