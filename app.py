@@ -450,3 +450,72 @@ st.markdown("""
     <p>© 2025 TradingView Pro. All rights reserved. Not financial advice.</p>
 </div>
 """, unsafe_allow_html=True)
+# Professional News Section like TradingView
+st.markdown("### 📰 Top Stories")
+
+# TradingView-style news data
+news_data = [
+    {"time": "12 hours ago", "source": "TradingView", "symbol": "TSLA", 
+     "headline": "Tesla Stock Gains as Traders Ramp Up Bets in Efforts to Hit a New All-Time High"},
+    
+    {"time": "18 hours ago", "source": "TradingView", "symbol": "EUR/USD", 
+     "headline": "Dollar Extends Gains Against Euro as Traders Price In Fed's Long-Term Guidance"},
+    
+    {"time": "3 days ago", "source": "TradingView", "symbol": "IXIC", 
+     "headline": "Nasdaq Composite Logs Fresh Record. Dow Jones and S&P 500 Join the ATH Party"},
+    
+    {"time": "4 days ago", "source": "TradingView", "symbol": "STUB", 
+     "headline": "StubHub Stock Fails to Impress in Trading Debut – Shares Slide 6.4% on IPO Day"},
+    
+    {"time": "13 hours ago", "source": "TradingView", "symbol": "QUBT", 
+     "headline": "Quantum Computing Stock Sheds 13% on $500 Million Share Offering. What's That Mean?"},
+    
+    {"time": "3 days ago", "source": "TradingView", "symbol": "BTC/USD", 
+     "headline": "Bitcoin Tops $117,000 but the Big Winners Are Two Altcoins. XRP and Solana Blast Off."},
+    
+    {"time": "4 days ago", "source": "TradingView", "symbol": "INTC", 
+     "headline": "Intel Stock Rockets 30% on $5 Billion Nvidia Investment. PCs, Get Ready for AI?"},
+    
+    {"time": "4 days ago", "source": "TradingView", "symbol": "SPX", 
+     "headline": "S&P 500 Ticks Lower After Fed's Rate Cut, Dow Jones Pops 260 Points. Why Divergence?"},
+    
+    {"time": "17 hours ago", "source": "TradingView", "symbol": "SPX", 
+     "headline": "S&P 500 Futures Dive After the Big Three Indices Settled at Record Highs. Crypto Sells Off."},
+    
+    {"time": "3 days ago", "source": "TradingView", "symbol": "USD/JPY", 
+     "headline": "Yen Gains Against Dollar as Bank of Japan Keeps Rates Steady, Plans Big ETF Sales"},
+    
+    {"time": "4 days ago", "source": "TradingView", "symbol": "GBP/USD", 
+     "headline": "Pound Dips Toward $1.36 After Bank of England Stays Put on Interest Rates"},
+    
+    {"time": "5 days ago", "source": "TradingView", "symbol": "FED", 
+     "headline": "Fed Delivers First Cut of 2025 and Projects Two More Before Year End. Here's What's Moving Most"}
+]
+
+# Display news in a professional format
+for news in news_data:
+    # Create a container for each news item
+    with st.container():
+        col1, col2 = st.columns([1, 4])
+        
+        with col1:
+            # Time and source
+            st.markdown(f"**{news['time']}**")
+            st.markdown(f"*{news['source']}*")
+            # Symbol with color coding
+            symbol_color = "green" if any(x in news['headline'].lower() for x in ['gains', 'pops', 'rockets', 'tops', 'blast']) else "red" if any(x in news['headline'].lower() for x in ['slide', 'sheds', 'dips', 'dive', 'sells']) else "blue"
+            st.markdown(f"<span style='color: {symbol_color}; font-weight: bold;'>{news['symbol']}</span>", unsafe_allow_html=True)
+        
+        with col2:
+            # Headline with better formatting
+            st.markdown(f"**{news['headline']}**")
+            
+            # Add sentiment indicator
+            if any(x in news['headline'].lower() for x in ['gains', 'pops', 'rockets', 'tops', 'blast', 'record']):
+                st.markdown("🟢 **Bullish** • High Impact")
+            elif any(x in news['headline'].lower() for x in ['slide', 'sheds', 'dips', 'dive', 'sells', 'fails']):
+                st.markdown("🔴 **Bearish** • Medium Impact")
+            else:
+                st.markdown("⚪ **Neutral** • Market News")
+        
+        st.markdown("---")
