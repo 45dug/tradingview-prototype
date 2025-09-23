@@ -1,374 +1,226 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import plotly.graph_objects as go
 from datetime import datetime, timedelta
+import time
 
 # ===== PAGE CONFIG =====
 st.set_page_config(
-    page_title="TradingView - Where the world does markets",
+    page_title="TradingView - Advanced Charts & Trading Platform",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# ===== PIXEL-PERFECT TRADINGVIEW CSS =====
-st.markdown("""
-<style>
-    /* Reset and base styles */
-    .main { 
-        background-color: #ffffff !important; 
-        color: #131722 !important;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        line-height: 1.6;
-    }
+# ===== GENERATE REALISTIC TRADING DATA =====
+def generate_live_data(symbol, periods=200):
+    np.random.seed(hash(symbol) % 100)
     
-    /* TradingView Top Banner */
-    .top-banner {
-        background: linear-gradient(90deg, #2962FF 0%, #2196F3 100%);
-        padding: 8px 0;
-        text-align: center;
-        color: white;
-        font-weight: 500;
-        font-size: 14px;
+    base_prices = {
+        "AAPL": 180, "TSLA": 250, "MSFT": 420, 
+        "BTCUSD": 65000, "SPX": 5200, "GOOGL": 2800
     }
+    base_price = base_prices.get(symbol, 100)
     
-    /* Main Navigation */
-    .main-nav {
-        background: white;
-        padding: 16px 0;
-        border-bottom: 1px solid #e3e4eb;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
+    # Generate realistic price movement
+    dates = [datetime.now() - timedelta(minutes=x) for x in range(periods, 0, -1)]
+    returns = np.random.normal(0, 0.002, periods)  # 0.2% daily volatility
+    prices = base_price * np.exp(np.cumsum(returns))
     
-    .nav-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0 20px;
-    }
+    # Create OHLC data
+    opens = prices * (1 + np.random.uniform(-0.001, 0.001, periods))
+    highs = prices * (1 + np.abs(np.random.normal(0, 0.0015, periods)))
+    lows = prices * (1 - np.abs(np.random.normal(0, 0.0015, periods)))
+    closes = prices * (1 + np.random.normal(0, 0.001, periods))
     
-    .logo {
-        font-size: 24px;
-        font-weight: 800;
-        color: #2962FF;
-        text-decoration: none;
-    }
+    df = pd.DataFrame({
+        'time': dates,
+        'open': opens, 'high': highs, 'low': lows, 'close': closes,
+        'volume': np.random.randint(1000000, 5000000, periods)
+    })
     
-    .nav-links {
-        display: flex;
-        gap: 32px;
-        font-weight: 500;
-    }
-    
-    .nav-links a {
-        color: #131722;
-        text-decoration: none;
-        font-size: 14px;
-    }
-    
-    .nav-links a:hover {
-        color: #2962FF;
-    }
-    
-    /* Hero Section - Exact TradingView Style */
-    .hero {
-        background: linear-gradient(135deg, #2962FF 0%, #2196F3 100%);
-        padding: 120px 0;
-        text-align: center;
-        color: white;
-    }
-    
-    .hero-content {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 0 20px;
-    }
-    
-    .hero h1 {
-        font-size: 48px;
-        font-weight: 800;
-        margin-bottom: 24px;
-        line-height: 1.1;
-    }
-    
-    .hero p {
-        font-size: 20px;
-        opacity: 0.95;
-        margin-bottom: 40px;
-        font-weight: 400;
-    }
-    
-    .cta-button {
-        background: white;
-        color: #2962FF;
-        border: none;
-        padding: 16px 48px;
-        font-size: 16px;
-        font-weight: 600;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        text-decoration: none;
-        display: inline-block;
-    }
-    
-    .cta-button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-    }
-    
-    /* Features Section */
-    .features {
-        padding: 80px 0;
-        background: white;
-    }
-    
-    .features-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 20px;
-    }
-    
-    .features-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 32px;
-        margin-top: 48px;
-    }
-    
-    .feature-card {
-        text-align: center;
-        padding: 32px;
-        border-radius: 12px;
-        background: #f8f9fa;
-        transition: all 0.2s ease;
-    }
-    
-    .feature-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-    }
-    
-    .feature-icon {
-        font-size: 40px;
-        margin-bottom: 20px;
-        color: #2962FF;
-    }
-    
-    .feature-title {
-        font-size: 20px;
-        font-weight: 700;
-        margin-bottom: 16px;
-        color: #131722;
-    }
-    
-    .feature-desc {
-        color: #5e6673;
-        line-height: 1.6;
-        font-size: 16px;
-    }
-    
-    /* Market Data Section */
-    .market-section {
-        background: #f8f9fa;
-        padding: 80px 0;
-    }
-    
-    .market-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 20px;
-    }
-    
-    .market-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 24px;
-        margin-top: 48px;
-    }
-    
-    .market-card {
-        background: white;
-        padding: 24px;
-        border-radius: 12px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-        border-left: 4px solid #2962FF;
-    }
-    
-    .market-title {
-        font-size: 14px;
-        font-weight: 600;
-        color: #5e6673;
-        margin-bottom: 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
-    .market-value {
-        font-size: 24px;
-        font-weight: 700;
-        color: #131722;
-        margin-bottom: 8px;
-    }
-    
-    .market-change {
-        font-weight: 600;
-        font-size: 14px;
-    }
-    
-    .change-positive { color: #26a69a; }
-    .change-negative { color: #ef5350; }
-    
-    /* Footer */
-    .footer {
-        background: #131722;
-        color: white;
-        padding: 60px 0 40px;
-        text-align: center;
-    }
-    
-    .footer p {
-        opacity: 0.8;
-        margin-bottom: 8px;
-        font-size: 14px;
-    }
-    
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .features-grid { grid-template-columns: 1fr; gap: 24px; }
-        .hero h1 { font-size: 36px; }
-        .hero p { font-size: 18px; }
-        .market-grid { grid-template-columns: 1fr; }
-        .nav-links { display: none; }
-    }
-</style>
-""", unsafe_allow_html=True)
+    return df
 
-# ===== EXACT TRADINGVIEW LAYOUT =====
+# ===== INITIALIZE SESSION STATE =====
+if 'current_symbol' not in st.session_state:
+    st.session_state.current_symbol = "AAPL"
+if 'chart_data' not in st.session_state:
+    st.session_state.chart_data = generate_live_data("AAPL")
+if 'live_mode' not in st.session_state:
+    st.session_state.live_mode = False
 
-# Top Banner
-st.markdown("""
-<div class="top-banner">
-    Join 100M+ traders and investors - Start free today →
-</div>
-""", unsafe_allow_html=True)
+# ===== SIDEBAR - TRADINGVIEW STYLE =====
+with st.sidebar:
+    st.title("📊 TradingView")
+    st.markdown("---")
+    
+    # Watchlist
+    st.subheader("📍 Watchlist")
+    symbols = {
+        "AAPL": "Apple Inc.", "TSLA": "Tesla Inc.", "MSFT": "Microsoft",
+        "BTCUSD": "Bitcoin/USD", "SPX": "S&P 500", "GOOGL": "Google"
+    }
+    
+    for symbol, name in symbols.items():
+        if st.button(f"{symbol} - {name}", key=f"btn_{symbol}", use_container_width=True):
+            st.session_state.current_symbol = symbol
+            st.session_state.chart_data = generate_live_data(symbol)
+            st.rerun()
+    
+    st.markdown("---")
+    
+    # Chart Controls
+    st.subheader("⚙️ Chart Settings")
+    chart_type = st.selectbox("Chart Type", ["Candlestick", "Line", "Area"])
+    timeframe = st.selectbox("Timeframe", ["1m", "5m", "15m", "1H", "4H", "1D"])
+    
+    st.markdown("---")
+    
+    # Indicators
+    st.subheader("📈 Indicators")
+    st.checkbox("Moving Average (50)")
+    st.checkbox("RSI (14)")
+    st.checkbox("MACD")
+    st.checkbox("Bollinger Bands")
+    
+    st.markdown("---")
+    
+    # Account Summary
+    st.subheader("💼 Portfolio")
+    st.metric("Account Value", "$125,430.25", "+2.3%")
+    st.write("**AAPL:** 15 shares")
+    st.write("**Cash:** $12,500.00")
 
-# Main Navigation
-st.markdown("""
-<div class="main-nav">
-    <div class="nav-container">
-        <a href="#" class="logo">TradingView</a>
-        <div class="nav-links">
-            <a href="#">Products</a>
-            <a href="#">Charts</a>
-            <a href="#">Screener</a>
-            <a href="#">Community</a>
-            <a href="#">Markets</a>
-            <a href="#">Brokers</a>
-        </div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+# ===== MAIN TRADING INTERFACE =====
+st.header(f"📈 {st.session_state.current_symbol} - Live Chart")
 
-# Hero Section
-st.markdown("""
-<div class="hero">
-    <div class="hero-content">
-        <h1>Where the world does markets</h1>
-        <p>Join 100 million traders and investors taking the future into their own hands.</p>
-        <a href="#" class="cta-button">Get started for free</a>
-        <p style="margin-top: 20px; opacity: 0.9; font-size: 14px;">$0 forever, no credit card needed</p>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+# Current price info
+current_data = st.session_state.chart_data.iloc[-1]
+prev_data = st.session_state.chart_data.iloc[-2]
+price_change = current_data['close'] - prev_data['close']
+price_change_pct = (price_change / prev_data['close']) * 100
 
-# Features Section
-st.markdown("""
-<div class="features">
-    <div class="features-container">
-        <div style="text-align: center; margin-bottom: 60px;">
-            <h2 style="font-size: 32px; font-weight: 700; color: #131722; margin-bottom: 16px;">Look first / Then leap.</h2>
-            <p style="font-size: 18px; color: #5e6673; max-width: 600px; margin: 0 auto;">The best trades require research, then commitment.</p>
-        </div>
+# Price metrics
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+    st.metric(
+        "Current Price", 
+        f"${current_data['close']:.2f}", 
+        f"{price_change_pct:+.2f}%"
+    )
+with col2:
+    st.metric("Today's High", f"${current_data['high']:.2f}")
+with col3:
+    st.metric("Today's Low", f"${current_data['low']:.2f}")
+with col4:
+    st.metric("Volume", f"{current_data['volume']:,}")
+
+# Interactive Chart
+fig = go.Figure()
+
+if chart_type == "Candlestick":
+    fig.add_trace(go.Candlestick(
+        x=st.session_state.chart_data['time'],
+        open=st.session_state.chart_data['open'],
+        high=st.session_state.chart_data['high'],
+        low=st.session_state.chart_data['low'],
+        close=st.session_state.chart_data['close'],
+        name=st.session_state.current_symbol
+    ))
+else:
+    fig.add_trace(go.Scatter(
+        x=st.session_state.chart_data['time'],
+        y=st.session_state.chart_data['close'],
+        mode='lines',
+        name=st.session_state.current_symbol,
+        fill='tozeroy' if chart_type == "Area" else None
+    ))
+
+fig.update_layout(
+    height=500,
+    xaxis_rangeslider_visible=False,
+    template="plotly_white",
+    margin=dict(l=20, r=20, t=30, b=20)
+)
+
+st.plotly_chart(fig, use_container_width=True)
+
+# Live Trading Controls
+st.subheader("🎯 Trading Panel")
+
+col1, col2, col3 = st.columns([1, 1, 2])
+
+with col1:
+    if st.button("▶️ Start Live Data" if not st.session_state.live_mode else "⏸️ Pause Live"):
+        st.session_state.live_mode = not st.session_state.live_mode
+
+with col2:
+    if st.button("🔄 Refresh Data"):
+        st.session_state.chart_data = generate_live_data(st.session_state.current_symbol)
+        st.rerun()
+
+with col3:
+    # Order Entry
+    order_col1, order_col2, order_col3, order_col4 = st.columns(4)
+    with order_col1:
+        order_type = st.selectbox("Type", ["Market", "Limit"])
+    with order_col2:
+        quantity = st.number_input("Qty", min_value=1, value=100)
+    with order_col3:
+        if st.button("🟢 BUY", type="primary", use_container_width=True):
+            st.success(f"BUY order: {quantity} {st.session_state.current_symbol} @ ${current_data['close']:.2f}")
+    with order_col4:
+        if st.button("🔴 SELL", type="secondary", use_container_width=True):
+            st.error(f"SELL order: {quantity} {st.session_state.current_symbol} @ ${current_data['close']:.2f}")
+
+# Live data simulation
+if st.session_state.live_mode:
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    
+    for i in range(20):
+        if not st.session_state.live_mode:
+            break
+            
+        # Generate new price
+        last_close = st.session_state.chart_data['close'].iloc[-1]
+        new_return = np.random.normal(0, 0.001)  # 0.1% change
+        new_close = last_close * (1 + new_return)
         
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">📊</div>
-                <h3 class="feature-title">Advanced Charts</h3>
-                <p class="feature-desc">Professional trading charts with 100+ indicators and drawing tools</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">📱</div>
-                <h3 class="feature-title">Real-time Data</h3>
-                <p class="feature-desc">Live market data for stocks, crypto, forex, and indices</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">🤝</div>
-                <h3 class="feature-title">Social Trading</h3>
-                <p class="feature-desc">Follow top traders and share ideas with our community</p>
-            </div>
-        </div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-# Market Data Section
-st.markdown("""
-<div class="market-section">
-    <div class="market-container">
-        <div style="text-align: center; margin-bottom: 60px;">
-            <h2 style="font-size: 32px; font-weight: 700; color: #131722; margin-bottom: 16px;">Live Market Overview</h2>
-            <p style="font-size: 18px; color: #5e6673;">Real-time market data across all asset classes</p>
-        </div>
+        new_row = pd.DataFrame({
+            'time': [datetime.now()],
+            'open': [last_close],
+            'high': [max(last_close, new_close) * 1.001],
+            'low': [min(last_close, new_close) * 0.999],
+            'close': [new_close],
+            'volume': [np.random.randint(1000000, 3000000)]
+        })
         
-        <div class="market-grid">
-            <div class="market-card">
-                <div class="market-title">Crypto Market Cap</div>
-                <div class="market-value">3.91T USD</div>
-                <div class="market-change change-negative">-1.26% today</div>
-            </div>
-            
-            <div class="market-card">
-                <div class="market-title">US Dollar Index</div>
-                <div class="market-value">97.789 USD</div>
-                <div class="market-change change-positive">+0.15% today</div>
-            </div>
-            
-            <div class="market-card">
-                <div class="market-title">Crude Oil</div>
-                <div class="market-value">62.77 USD/BLL</div>
-                <div class="market-change change-positive">+0.59%</div>
-            </div>
-            
-            <div class="market-card">
-                <div class="market-title">FTSE 100</div>
-                <div class="market-value">9,216.67</div>
-                <div class="market-change change-negative">-0.12%</div>
-            </div>
-            
-            <div class="market-card">
-                <div class="market-title">DAX</div>
-                <div class="market-value">23,639.41</div>
-                <div class="market-change change-negative">-0.15%</div>
-            </div>
-            
-            <div class="market-card">
-                <div class="market-title">CAC 40</div>
-                <div class="market-value">7,853.59</div>
-                <div class="market-change change-negative">-0.01%</div>
-            </div>
-        </div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+        st.session_state.chart_data = pd.concat([
+            st.session_state.chart_data.iloc[1:],
+            new_row
+        ], ignore_index=True)
+        
+        progress_bar.progress((i + 1) / 20)
+        status_text.text(f"🔄 Live updating... {i + 1}/20")
+        time.sleep(0.5)
+    
+    progress_bar.empty()
+    status_text.empty()
+    st.session_state.live_mode = False
+    st.rerun()
 
-# Footer
-st.markdown("""
-<div class="footer">
-    <p>Scott "Kidd" Poteet • The unlikely astronaut • Watch explainer</p>
-    <p style="margin-top: 20px; opacity: 0.6;">© 2025 TradingView. All rights reserved.</p>
-</div>
-""", unsafe_allow_html=True)
+# Market News
+st.subheader("📰 Market News")
+news_items = [
+    ("Apple announces breakthrough in AI technology", "2 min ago", "AAPL"),
+    ("Federal Reserve maintains interest rates", "15 min ago", "SPX"),
+    ("Bitcoin ETF volumes hit record high", "30 min ago", "BTCUSD")
+]
+
+for headline, timestamp, symbol in news_items:
+    st.write(f"**{headline}** · `{timestamp}` · #{symbol}")
+
+st.markdown("---")
+st.caption("TradingView Prototype · Real-time trading platform · Data simulated for demonstration")
+
