@@ -19,6 +19,41 @@ st.markdown("""
     .watchlist-item:hover { background: #e3f2fd; }
 </style>
 """, unsafe_allow_html=True)
+# Add this to your existing CSS section:
+st.markdown("""
+<style>
+    /* Improve chart appearance */
+    .stLineChart {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    /* Better watchlist items */
+    .watchlist-item {
+        padding: 12px;
+        margin: 8px 0;
+        border-radius: 8px;
+        background: white;
+        border-left: 4px solid #2962ff;
+        transition: all 0.3s ease;
+    }
+    
+    .watchlist-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    /* Trading panel styling */
+    .trading-panel {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px 0;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # Generate realistic trading data
 def generate_stock_data(symbol, points=100):
