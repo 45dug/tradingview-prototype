@@ -1,20 +1,3 @@
-# app.py
-# Fixed & improved TradeLeap Streamlit app
-
-# Quick pre-check for missing packages so hosts show a clear error
-_required = ['streamlit', 'pandas', 'numpy', 'plotly']
-_missing = []
-for _pkg in _required:
-    try:
-        __import__(_pkg)
-    except ImportError:
-        _missing.append(_pkg)
-if _missing:
-    raise ModuleNotFoundError(
-        f"Missing packages: {_missing}\n"
-        "Add them to requirements.txt (see example below) and redeploy."
-    )
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -24,14 +7,14 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-# Page setup
+# Page setup with enhanced styling
 st.set_page_config(
     page_title="TradeLeap - Look First, Then Leap",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# CSS (responsive fixes + same theme)
+# Advanced CSS with all new features
 st.markdown("""
 <style>
     /* Main TradingView Theme with Wallpaper */
@@ -41,6 +24,8 @@ st.markdown("""
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         min-height: 100vh;
     }
+    
+    /* Wallpaper effect with subtle pattern */
     .main::before {
         content: '';
         position: fixed;
@@ -53,6 +38,8 @@ st.markdown("""
             radial-gradient(circle at 90% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 20%);
         z-index: -1;
     }
+    
+    /* Header Styling - Look First / Then Leap */
     .header-container {
         background: rgba(30, 34, 45, 0.95);
         backdrop-filter: blur(10px);
@@ -60,6 +47,7 @@ st.markdown("""
         padding: 1rem 2rem;
         margin: -1rem -1rem 2rem -1rem;
     }
+    
     .header-title {
         font-size: 2.5rem;
         font-weight: 700;
@@ -69,41 +57,209 @@ st.markdown("""
         text-align: center;
         margin-bottom: 0.5rem;
     }
-    .header-subtitle { text-align: center; color: #b0b3b8; font-size: 1.1rem; margin-bottom: 1rem; }
-    .cta-button { background: linear-gradient(45deg, #2962ff, #00acc1); color: white; border: none; border-radius: 25px; padding: 12px 30px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.3s ease; display: block; margin: 0 auto; text-decoration: none; }
-    .cta-button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(41, 98, 255, 0.4); }
-
-    .top-nav { background: rgba(30, 34, 45, 0.9); backdrop-filter: blur(10px); padding: 0.8rem 2rem; margin: -2rem -1rem 1rem -1rem; border-bottom: 1px solid #2a2e39; display: flex; justify-content: space-between; align-items: center; }
-    .nav-section { display: flex; align-items: center; gap: 2rem; }
-    .nav-item { color: #d1d4dc; text-decoration: none; font-weight: 500; cursor: pointer; transition: color 0.3s ease; }
-    .nav-item:hover { color: #2962ff; }
-    .search-box { background: rgba(42, 46, 57, 0.8); border: 1px solid #3a3e49; border-radius: 20px; padding: 8px 15px; color: #d1d4dc; width: 200px; }
-
-    .forex-section { background: rgba(30, 34, 45, 0.8); border-radius: 8px; padding: 15px; margin: 10px 0; }
-    .currency-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 10px; margin: 15px 0; }
-    .currency-item { background: rgba(42, 46, 57, 0.6); padding: 10px; border-radius: 6px; text-align: center; cursor: pointer; transition: all 0.3s ease; }
-    .currency-item:hover { background: rgba(58, 62, 73, 0.8); transform: translateY(-2px); }
-    .currency-item.active { background: #2962ff; color: white; }
-
-    .timeframe-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); gap: 5px; margin: 15px 0; }
-
-    .news-section { background: rgba(30, 34, 45, 0.8); border-radius: 8px; padding: 20px; margin: 15px 0; }
-    .news-item { background: rgba(42, 46, 57, 0.6); padding: 15px; margin: 10px 0; border-radius: 6px; border-left: 3px solid #2962ff; }
-    .news-time { color: #8c9baf; font-size: 0.9rem; margin-bottom: 5px; }
-    .news-headline { font-weight: 600; margin-bottom: 5px; }
-    .news-source { color: #26a69a; font-size: 0.8rem; }
-
-    .economy-section { background: rgba(30, 34, 45, 0.8); border-radius: 8px; padding: 20px; margin: 15px 0; }
-    .inflation-legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px,1fr)); gap: 5px; margin: 15px 0; }
-
-    .sidebar .sidebar-content { background-color: rgba(30, 34, 45, 0.9); color: #d1d4dc; backdrop-filter: blur(10px); }
-    .card { background: rgba(30, 34, 45, 0.8); border-radius: 8px; padding: 15px; margin: 10px 0; border-left: 4px solid #2962ff; backdrop-filter: blur(5px); }
-
+    
+    .header-subtitle {
+        text-align: center;
+        color: #b0b3b8;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .cta-button {
+        background: linear-gradient(45deg, #2962ff, #00acc1);
+        color: white;
+        border: none;
+        border-radius: 25px;
+        padding: 12px 30px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: block;
+        margin: 0 auto;
+        text-decoration: none;
+    }
+    
+    .cta-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(41, 98, 255, 0.4);
+    }
+    
+    /* Top Navigation Bar */
+    .top-nav {
+        background: rgba(30, 34, 45, 0.9);
+        backdrop-filter: blur(10px);
+        padding: 0.8rem 2rem;
+        margin: -2rem -1rem 1rem -1rem;
+        border-bottom: 1px solid #2a2e39;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .nav-section {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+    }
+    
+    .nav-item {
+        color: #d1d4dc;
+        text-decoration: none;
+        font-weight: 500;
+        cursor: pointer;
+        transition: color 0.3s ease;
+    }
+    
+    .nav-item:hover {
+        color: #2962ff;
+    }
+    
+    .search-box {
+        background: rgba(42, 46, 57, 0.8);
+        border: 1px solid #3a3e49;
+        border-radius: 20px;
+        padding: 8px 15px;
+        color: #d1d4dc;
+        width: 200px;
+    }
+    
+    /* Forex Rates Section */
+    .forex-section {
+        background: rgba(30, 34, 45, 0.8);
+        border-radius: 8px;
+        padding: 15px;
+        margin: 10px 0;
+    }
+    
+    .currency-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 10px;
+        margin: 15px 0;
+    }
+    
+    .currency-item {
+        background: rgba(42, 46, 57, 0.6);
+        padding: 10px;
+        border-radius: 6px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .currency-item:hover {
+        background: rgba(58, 62, 73, 0.8);
+        transform: translateY(-2px);
+    }
+    
+    .currency-item.active {
+        background: #2962ff;
+        color: white;
+    }
+    
+    .timeframe-grid {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 5px;
+        margin: 15px 0;
+    }
+    
+    .timeframe-btn {
+        background: rgba(42, 46, 57, 0.6);
+        color: #d1d4dc;
+        border: none;
+        border-radius: 4px;
+        padding: 8px 5px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+    
+    .timeframe-btn.active {
+        background: #2962ff;
+        color: white;
+    }
+    
+    /* News Section */
+    .news-section {
+        background: rgba(30, 34, 45, 0.8);
+        border-radius: 8px;
+        padding: 20px;
+        margin: 15px 0;
+    }
+    
+    .news-item {
+        background: rgba(42, 46, 57, 0.6);
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 6px;
+        border-left: 3px solid #2962ff;
+    }
+    
+    .news-time {
+        color: #8c9baf;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+    }
+    
+    .news-headline {
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .news-source {
+        color: #26a69a;
+        font-size: 0.8rem;
+    }
+    
+    /* Economy Section */
+    .economy-section {
+        background: rgba(30, 34, 45, 0.8);
+        border-radius: 8px;
+        padding: 20px;
+        margin: 15px 0;
+    }
+    
+    .inflation-legend {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 5px;
+        margin: 15px 0;
+    }
+    
+    .legend-item {
+        padding: 8px;
+        border-radius: 4px;
+        text-align: center;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    /* Sidebar Styling */
+    .sidebar .sidebar-content {
+        background-color: rgba(30, 34, 45, 0.9);
+        color: #d1d4dc;
+        backdrop-filter: blur(10px);
+    }
+    
+    /* Professional Cards */
+    .card {
+        background: rgba(30, 34, 45, 0.8);
+        border-radius: 8px;
+        padding: 15px;
+        margin: 10px 0;
+        border-left: 4px solid #2962ff;
+        backdrop-filter: blur(5px);
+    }
+    
+    /* Colors */
     .green { color: #26a69a; font-weight: 600; }
     .red { color: #ef5350; font-weight: 600; }
     .blue { color: #2962ff; }
-
-    /* Default Streamlit button override (keeps look consistent) */
+    
+    /* Buttons */
     .stButton>button {
         background-color: #2962ff;
         color: white;
@@ -113,64 +269,75 @@ st.markdown("""
         font-weight: 500;
         transition: all 0.3s ease;
     }
-    /* make secondary style for SELL visually distinct by using markdown below */
 </style>
 """, unsafe_allow_html=True)
 
-# ---------- Data & helpers ----------
+# Generate advanced trading data with OHLC
 def generate_advanced_data(symbol, points=200):
-    # ensure positive seed
-    seed = abs(hash(symbol)) % (2**32)
-    np.random.seed(int(seed))
-
+    np.random.seed(hash(symbol) % 100)
+    
     base_prices = {
         "AAPL": 180, "TSLA": 250, "MSFT": 420, "GOOGL": 2800,
         "BTCUSD": 65000, "SPX": 5200, "NVDA": 120, "AMZN": 3500,
         "EURUSD": 1.08, "GBPUSD": 1.26, "USDJPY": 147.5, "USDCHF": 0.88
     }
     base_price = base_prices.get(symbol, 100)
-
+    
     dates = [datetime.now() - timedelta(minutes=x) for x in range(points, 0, -1)]
-
+    
+    # Generate realistic price movement with volatility
     returns = np.random.normal(0, 0.002, points)
     prices = base_price * np.exp(np.cumsum(returns))
-
-    opens, highs, lows, closes = [], [], [], []
+    
+    # Create OHLC data
+    opens = []
+    highs = []
+    lows = []
+    closes = []
+    
     for i in range(points):
-        open_price = closes[i-1] if i > 0 else base_price
-        close_price = float(prices[i])
+        if i == 0:
+            open_price = base_price
+        else:
+            open_price = closes[i-1] if closes else base_price
+            
+        close_price = prices[i]
         high_price = max(open_price, close_price) * (1 + abs(np.random.normal(0, 0.005)))
         low_price = min(open_price, close_price) * (1 - abs(np.random.normal(0, 0.005)))
+        
         opens.append(open_price)
         highs.append(high_price)
         lows.append(low_price)
         closes.append(close_price)
-
+    
     df = pd.DataFrame({
         'timestamp': dates,
         'open': opens, 'high': highs, 'low': lows, 'close': closes,
         'volume': np.random.randint(1000000, 5000000, points)
     })
+    
     return df
 
+# Calculate technical indicators
 def calculate_indicators(df):
-    df = df.copy()
-    df['sma_20'] = df['close'].rolling(window=20, min_periods=1).mean()
-    df['sma_50'] = df['close'].rolling(window=50, min_periods=1).mean()
-
+    df['sma_20'] = df['close'].rolling(window=20).mean()
+    df['sma_50'] = df['close'].rolling(window=50).mean()
+    
     delta = df['close'].diff()
-    gain = (delta.where(delta > 0, 0)).rolling(window=14, min_periods=1).mean()
-    loss = (-delta.where(delta < 0, 0)).rolling(window=14, min_periods=1).mean()
-    rs = gain / (loss.replace(0, np.nan))
+    gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+    rs = gain / loss
     df['rsi'] = 100 - (100 / (1 + rs))
-    df['rsi'] = df['rsi'].fillna(50)  # neutral where insufficient data
+    
     return df
 
+# Generate inflation data for economy section
 def generate_inflation_data():
     countries = ['USA', 'UK', 'Germany', 'France', 'Japan', 'Canada', 'Australia', 'Brazil', 'India', 'China']
     inflation_rates = np.random.uniform(-2, 25, len(countries))
     return pd.DataFrame({'Country': countries, 'Inflation': inflation_rates})
 
+# Generate forex news data
 def generate_forex_news():
     return [
         {"time": "yesterday - Dow Jones Newswires", "headline": "Sterling Gains 0.31% to $1.3514 — Data Talk", "source": "DJN"},
@@ -183,7 +350,7 @@ def generate_forex_news():
         {"time": "2 days ago - Bloomberg", "headline": "New Zealand to make an announcement related to central bank on Wednesday", "source": "Bloomberg"}
     ]
 
-# ---------- Session state ----------
+# Initialize session state
 if 'current_symbol' not in st.session_state:
     st.session_state.current_symbol = "EURUSD"
 if 'chart_data' not in st.session_state:
@@ -194,15 +361,11 @@ if 'timeframe' not in st.session_state:
     st.session_state.timeframe = "1D"
 if 'base_currency' not in st.session_state:
     st.session_state.base_currency = "EUR"
-if 'trade_log' not in st.session_state:
-    st.session_state.trade_log = []
-if 'show_more_news' not in st.session_state:
-    st.session_state.show_more_news = False
 
-# calculate indicators
+# Calculate indicators
 st.session_state.chart_data = calculate_indicators(st.session_state.chart_data)
 
-# ---------- UI ----------
+# Header Section - Look First / Then Leap
 st.markdown("""
 <div class="header-container">
     <div class="header-title">Look First / Then Leap</div>
@@ -214,6 +377,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# Top Navigation Bar
 st.markdown("""
 <div class="top-nav">
     <div class="nav-section">
@@ -231,92 +395,123 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# Main content layout
 col1, col2, col3 = st.columns([2, 1, 1])
 
-# --- Col 1: Forex rates + Chart ---
 with col1:
-    st.markdown(f"""
+    # Forex Rates Section
+    st.markdown("""
     <div class="forex-section">
         <h3>💱 Forex Rates</h3>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h4>Base Currency: {st.session_state.base_currency}</h4>
-            <div style="color: #8c9baf; font-size: 0.9rem;">See all rates &gt;</div>
+            <h4>Base Currency: {}</h4>
+            <div style="color: #8c9baf; font-size: 0.9rem;">See all rates ></div>
         </div>
     </div>
-    """, unsafe_allow_html=True)
-
+    """.format(st.session_state.base_currency), unsafe_allow_html=True)
+    
+    # Base Currency Selection
     base_currencies = ["EUR", "USD", "GBP", "JPY", "CHF", "AUD", "CNY", "CAD"]
-    base_cols = st.columns(len(base_currencies))
+    base_cols = st.columns(8)
     for i, currency in enumerate(base_currencies):
         with base_cols[i]:
             if st.button(currency, key=f"base_{currency}", use_container_width=True):
                 st.session_state.base_currency = currency
                 st.session_state.current_symbol = f"{currency}USD" if currency != "USD" else "EURUSD"
                 st.session_state.chart_data = generate_advanced_data(st.session_state.current_symbol)
-                st.session_state.chart_data = calculate_indicators(st.session_state.chart_data)
-
+                st.rerun()
+    
+    # Quote Currencies Display
     quote_currencies = ["USD", "GBP", "JPY", "CHF", "AUD", "CNY", "CAD"]
-    quote_cols = st.columns(len(quote_currencies))
+    quote_cols = st.columns(7)
+    
     for i, currency in enumerate(quote_currencies):
         with quote_cols[i]:
             if currency != st.session_state.base_currency:
-                if st.session_state.base_currency == "EUR":
-                    rate = np.random.uniform(0.8, 1.5)
-                elif currency == "JPY":
-                    rate = np.random.uniform(100, 150)
-                else:
-                    rate = np.random.uniform(0.7, 2.0)
-                change_pct = np.random.uniform(-2, 2)
-                st.metric(label=currency, value=f"{rate:.4f}", delta=f"{change_pct:+.2f}%")
-
-    st.markdown("<div style='margin: 20px 0;'><h4>Timeframe</h4></div>", unsafe_allow_html=True)
+                # Generate realistic exchange rate
+                rate = np.random.uniform(0.8, 1.5) if st.session_state.base_currency == "EUR" else np.random.uniform(100, 150) if currency == "JPY" else np.random.uniform(0.7, 2.0)
+                change = np.random.uniform(-0.02, 0.02)
+                change_pct = change * 100
+                
+                st.metric(
+                    label=currency,
+                    value=f"{rate:.4f}",
+                    delta=f"{change_pct:+.2f}%",
+                    delta_color="normal"
+                )
+    
+    # Timeframe Selection
+    st.markdown("""
+    <div style="margin: 20px 0;">
+        <h4>Timeframe</h4>
+    </div>
+    """, unsafe_allow_html=True)
+    
     timeframes = ["1D", "1W", "1M", "3M", "6M", "1Y", "YTD", "5Y", "All"]
-    tf_cols = st.columns(len(timeframes))
+    tf_cols = st.columns(9)
+    
     for i, tf in enumerate(timeframes):
         with tf_cols[i]:
             if st.button(tf, key=f"time_{tf}", use_container_width=True):
                 st.session_state.timeframe = tf
-
-    # Main Chart with RSI subplot
+                st.rerun()
+    
+    # Main Chart Display
     st.markdown("### 📈 Advanced Chart")
-    df = st.session_state.chart_data
-
-    fig = make_subplots(rows=2, cols=1, shared_xaxes=True,
-                        row_heights=[0.72, 0.28], vertical_spacing=0.06)
-
+    
+    # Create interactive chart with Plotly
+    fig = go.Figure()
+    
+    # Add candlestick chart
     fig.add_trace(go.Candlestick(
-        x=df['timestamp'], open=df['open'], high=df['high'], low=df['low'], close=df['close'],
+        x=st.session_state.chart_data['timestamp'],
+        open=st.session_state.chart_data['open'],
+        high=st.session_state.chart_data['high'],
+        low=st.session_state.chart_data['low'],
+        close=st.session_state.chart_data['close'],
         name=st.session_state.current_symbol
-    ), row=1, col=1)
-
-    fig.add_trace(go.Scatter(x=df['timestamp'], y=df['sma_20'], name='SMA 20', line=dict(width=1, dash='solid')), row=1, col=1)
-    fig.add_trace(go.Scatter(x=df['timestamp'], y=df['sma_50'], name='SMA 50', line=dict(width=1, dash='dash')), row=1, col=1)
-
-    fig.add_trace(go.Scatter(x=df['timestamp'], y=df['rsi'], name='RSI (14)', line=dict(width=1)), row=2, col=1)
-    # RSI threshold lines
-    fig.add_hline(y=70, line_dash="dot", line_color="red", row=2, col=1)
-    fig.add_hline(y=30, line_dash="dot", line_color="green", row=2, col=1)
-
-    fig.update_xaxes(rangeslider_visible=False)
-    fig.update_layout(height=520, template="plotly_dark", title=f"{st.session_state.current_symbol} - {st.session_state.timeframe}", showlegend=True)
-    fig.update_yaxes(title_text="Price", row=1, col=1)
-    fig.update_yaxes(title_text="RSI", row=2, col=1, range=[0, 100])
-
+    ))
+    
+    # Add moving averages
+    fig.add_trace(go.Scatter(
+        x=st.session_state.chart_data['timestamp'],
+        y=st.session_state.chart_data['sma_20'],
+        name='SMA 20',
+        line=dict(color='orange', width=1)
+    ))
+    
+    fig.add_trace(go.Scatter(
+        x=st.session_state.chart_data['timestamp'],
+        y=st.session_state.chart_data['sma_50'],
+        name='SMA 50',
+        line=dict(color='blue', width=1)
+    ))
+    
+    fig.update_layout(
+        height=500,
+        title=f"{st.session_state.current_symbol} - {st.session_state.timeframe}",
+        xaxis_title="Time",
+        yaxis_title="Price",
+        template="plotly_dark",
+        showlegend=True
+    )
+    
     st.plotly_chart(fig, use_container_width=True)
 
-# --- Col 2: News ---
 with col2:
+    # Forex News Section
     st.markdown("""
     <div class="news-section">
         <h3>📰 Forex News</h3>
         <div style="color: #8c9baf; font-size: 0.9rem; margin-bottom: 15px;">
-            Sign in to read exclusive news &gt;
+            Sign in to read exclusive news >
         </div>
     </div>
     """, unsafe_allow_html=True)
-
+    
     news_data = generate_forex_news()
-    for news in news_data[:4]:
+    
+    for i, news in enumerate(news_data[:4]):  # Show first 4 news items
         st.markdown(f"""
         <div class="news-item">
             <div class="news-time">{news['time']}</div>
@@ -324,12 +519,12 @@ with col2:
             <div class="news-source">{news['source']}</div>
         </div>
         """, unsafe_allow_html=True)
-
-    if st.button("Keep reading >", use_container_width=True, key="toggle_news"):
-        st.session_state.show_more_news = not st.session_state.show_more_news
-
-    if st.session_state.show_more_news:
-        for news in news_data[4:]:
+    
+    if st.button("Keep reading >", use_container_width=True):
+        st.session_state.show_more_news = not st.session_state.get('show_more_news', False)
+    
+    if st.session_state.get('show_more_news', False):
+        for i, news in enumerate(news_data[4:]):
             st.markdown(f"""
             <div class="news-item">
                 <div class="news-time">{news['time']}</div>
@@ -338,17 +533,18 @@ with col2:
             </div>
             """, unsafe_allow_html=True)
 
-# --- Col 3: Economy + Products ---
 with col3:
+    # Economy Section
     st.markdown("""
     <div class="economy-section">
         <h3>🌍 Economy</h3>
         <div style="color: #8c9baf; font-size: 0.9rem; margin-bottom: 15px;">
-            Global inflation map &gt;
+            Global inflation map >
         </div>
     </div>
     """, unsafe_allow_html=True)
-
+    
+    # Inflation Legend
     st.markdown("""
     <div class="inflation-legend">
         <div class="legend-item" style="background: #1a237e; color: white;">Less than 0%</div>
@@ -359,24 +555,46 @@ with col3:
         <div class="legend-item" style="background: #9fa8da; color: #1a237e;">More than 25%</div>
     </div>
     """, unsafe_allow_html=True)
-
+    
+    # Inflation Data Visualization
     inflation_data = generate_inflation_data()
+    
+    # Create inflation chart
     fig_inflation = px.choropleth(
-        inflation_data, locations="Country", locationmode="country names",
-        color="Inflation", color_continuous_scale="Blues", title="Global Inflation Rates",
+        inflation_data,
+        locations="Country",
+        locationmode="country names",
+        color="Inflation",
+        color_continuous_scale="Blues",
+        title="Global Inflation Rates",
         range_color=[-2, 25]
     )
-    fig_inflation.update_layout(height=300, margin=dict(l=0, r=0, t=30, b=0))
+    
+    fig_inflation.update_layout(
+        height=300,
+        geo=dict(
+            showframe=False,
+            showcoastlines=True,
+            projection_type='equirectangular'
+        ),
+        margin=dict(l=0, r=0, t=30, b=0)
+    )
+    
     st.plotly_chart(fig_inflation, use_container_width=True)
-
+    
+    # Products Section
     st.markdown("""
     <div class="news-section">
         <h3>📦 Products</h3>
     </div>
     """, unsafe_allow_html=True)
-    products = [{"name": "Product Sheet", "year": "2022", "time": "15:00"},
-                {"name": "Community Marks", "year": "", "time": "15:00"},
-                {"name": "Markets Brokers More", "year": "", "time": "10:00"}]
+    
+    products = [
+        {"name": "Product Sheet", "year": "2022", "time": "15:00"},
+        {"name": "Community Marks", "year": "", "time": "15:00"},
+        {"name": "Markets Brokers More", "year": "", "time": "10:00"}
+    ]
+    
     for product in products:
         st.markdown(f"""
         <div class="news-item">
@@ -388,44 +606,35 @@ with col3:
         </div>
         """, unsafe_allow_html=True)
 
-# ---------- Trading Panel ----------
+# Trading Panel at the bottom
 st.markdown("### 🎯 Trading Panel")
-tcols = st.columns(7)
 
-with tcols[0]:
+tcol1, tcol2, tcol3, tcol4, tcol5, tcol6, tcol7 = st.columns(7)
+
+with tcol1:
     live_icon = "⏸️" if st.session_state.is_live else "▶️"
-    if st.button(live_icon, help="Live Trading Mode", key="toggle_live", use_container_width=True):
+    if st.button(live_icon, help="Live Trading Mode", use_container_width=True):
         st.session_state.is_live = not st.session_state.is_live
 
-with tcols[1]:
-    if st.button("🔄", help="Refresh Data", key="refresh", use_container_width=True):
+with tcol2:
+    if st.button("🔄", help="Refresh Data", use_container_width=True):
         st.session_state.chart_data = generate_advanced_data(st.session_state.current_symbol)
         st.session_state.chart_data = calculate_indicators(st.session_state.chart_data)
+        st.rerun()
 
-with tcols[5]:
-    if st.button("🟢 BUY", key="buy", use_container_width=True):
+with tcol6:
+    if st.button("🟢 BUY", type="primary", use_container_width=True):
         current_data = st.session_state.chart_data.iloc[-1]
         quantity = 100
-        price = current_data['close']
-        st.session_state.trade_log.append(f"BUY {quantity} {st.session_state.current_symbol} @ ${price:.2f}")
-        st.success(f"✅ BUY {quantity} {st.session_state.current_symbol} @ ${price:.2f}")
+        order_value = quantity * current_data['close']
+        st.success(f"✅ BUY {quantity} {st.session_state.current_symbol} @ ${current_data['close']:.2f}")
 
-with tcols[6]:
-    # use a markdown-styled button for visual difference (Streamlit doesn't support type=)
-    if st.button("🔴 SELL", key="sell", use_container_width=True):
+with tcol7:
+    if st.button("🔴 SELL", type="secondary", use_container_width=True):
         current_data = st.session_state.chart_data.iloc[-1]
         quantity = 100
-        price = current_data['close']
-        st.session_state.trade_log.append(f"SELL {quantity} {st.session_state.current_symbol} @ ${price:.2f}")
-        st.error(f"✅ SELL {quantity} {st.session_state.current_symbol} @ ${price:.2f}")
-
-# Trade history
-st.markdown("#### Trade History")
-if st.session_state.trade_log:
-    for entry in reversed(st.session_state.trade_log[-10:]):
-        st.write(entry)
-else:
-    st.write("No trades yet.")
+        order_value = quantity * current_data['close']
+        st.error(f"✅ SELL {quantity} {st.session_state.current_symbol} @ ${current_data['close']:.2f}")
 
 # Footer
 st.markdown("---")
