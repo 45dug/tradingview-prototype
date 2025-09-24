@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import requests
-import plotly.graph_objs as go
+import plotly.graph_objects as go  # ✅ updated import
 
 # -------------------------------
 # TradingView Prototype
@@ -69,3 +69,4 @@ if not df.empty:
         st.write(df)
 else:
     st.warning("No data available. Please check the symbol or interval.")
+
