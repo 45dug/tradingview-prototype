@@ -4,66 +4,133 @@ import numpy as np
 from datetime import datetime, timedelta
 import time
 
-# Page setup
+# Page setup with enhanced styling
 st.set_page_config(
-    page_title="TradingView Pro - Advanced Trading Platform",
-    layout="wide"
+    page_title="TradeLeap - Look First, Then Leap",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# Advanced CSS for TradingView-like interface
+# Advanced CSS with wallpaper and header styling
 st.markdown("""
 <style>
-    /* Main TradingView Theme */
+    /* Main TradingView Theme with Wallpaper */
     .main { 
-        background-color: #131722; 
+        background: linear-gradient(135deg, #0c2461 0%, #1e3799 50%, #4a69bd 100%);
         color: #d1d4dc;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        min-height: 100vh;
+    }
+    
+    /* Wallpaper effect with subtle pattern */
+    .main::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: 
+            radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 20%),
+            radial-gradient(circle at 90% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 20%);
+        z-index: -1;
+    }
+    
+    /* Header Styling - Look First / Then Leap */
+    .header-container {
+        background: rgba(30, 34, 45, 0.95);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid #2962ff;
+        padding: 1rem 2rem;
+        margin: -1rem -1rem 2rem -1rem;
+    }
+    
+    .header-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(45deg, #2962ff, #00acc1);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .header-subtitle {
+        text-align: center;
+        color: #b0b3b8;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .cta-button {
+        background: linear-gradient(45deg, #2962ff, #00acc1);
+        color: white;
+        border: none;
+        border-radius: 25px;
+        padding: 12px 30px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: block;
+        margin: 0 auto;
+        text-decoration: none;
+    }
+    
+    .cta-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(41, 98, 255, 0.4);
     }
     
     /* Sidebar Styling */
     .sidebar .sidebar-content {
-        background-color: #1e222d;
+        background-color: rgba(30, 34, 45, 0.9);
         color: #d1d4dc;
+        backdrop-filter: blur(10px);
     }
     
     /* Professional Cards */
     .card {
-        background: #1e222d;
+        background: rgba(30, 34, 45, 0.8);
         border-radius: 8px;
         padding: 15px;
         margin: 10px 0;
         border-left: 4px solid #2962ff;
+        backdrop-filter: blur(5px);
     }
     
     /* Watchlist Items */
     .watchlist-item {
-        background: #2a2e39;
+        background: rgba(42, 46, 57, 0.8);
         padding: 12px;
         margin: 8px 0;
         border-radius: 6px;
         transition: all 0.3s ease;
         cursor: pointer;
+        backdrop-filter: blur(5px);
     }
     
     .watchlist-item:hover {
-        background: #3a3e49;
+        background: rgba(58, 62, 73, 0.9);
         transform: translateX(5px);
     }
     
     /* Chart Container */
     .chart-container {
-        background: #131722;
+        background: rgba(19, 23, 34, 0.9);
         border-radius: 8px;
         padding: 20px;
         margin: 15px 0;
+        backdrop-filter: blur(5px);
     }
     
     /* Trading Panel */
     .trading-panel {
-        background: #1e222d;
+        background: rgba(30, 34, 45, 0.9);
         padding: 20px;
         border-radius: 8px;
         margin: 20px 0;
+        backdrop-filter: blur(5px);
     }
     
     /* Colors */
@@ -79,21 +146,37 @@ st.markdown("""
         border-radius: 6px;
         padding: 10px 20px;
         font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .stButton>button:hover {
+        background-color: #1e52d4;
+        transform: translateY(-1px);
     }
     
     .timeframe-btn {
-        background: #2a2e39;
+        background: rgba(42, 46, 57, 0.8);
         color: #d1d4dc;
-        border: 1px solid #3a3e49;
+        border: 1px solid rgba(58, 62, 73, 0.8);
         border-radius: 4px;
         padding: 8px 12px;
         margin: 2px;
         cursor: pointer;
+        transition: all 0.3s ease;
     }
     
     .timeframe-btn.active {
         background: #2962ff;
         color: white;
+    }
+    
+    /* Enhanced metric cards */
+    .metric-card {
+        background: rgba(30, 34, 45, 0.8);
+        border-radius: 8px;
+        padding: 15px;
+        margin: 5px;
+        border-left: 3px solid #2962ff;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -175,9 +258,21 @@ if 'indicators' not in st.session_state:
 # Calculate indicators
 st.session_state.chart_data = calculate_indicators(st.session_state.chart_data)
 
+# Header Section - Look First / Then Leap
+st.markdown("""
+<div class="header-container">
+    <div class="header-title">Look First / Then Leap</div>
+    <div class="header-subtitle">The best trades require research, then commitment.</div>
+    <a href="#trading-section" class="cta-button">Get started for free</a>
+    <div style="text-align: center; margin-top: 10px; font-size: 0.9rem; color: #8c9baf;">
+        $0 forever, no credit card needed
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
 # Sidebar - Advanced TradingView Interface
 with st.sidebar:
-    st.markdown("<h1 style='color: #2962ff;'>TradingView Pro</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='color: #2962ff;'>TradeLeap Pro</h1>", unsafe_allow_html=True)
     st.markdown("---")
     
     # Advanced Watchlist
@@ -446,76 +541,7 @@ for news in news_items:
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; color: #6a737d;'>
-    <p>TradingView Pro • Advanced Trading Platform • Real-time Data • Professional Charts</p>
-    <p>© 2025 TradingView Pro. All rights reserved. Not financial advice.</p>
+    <p>TradeLeap Pro • Look First, Then Leap • Real-time Data • Professional Charts</p>
+    <p>© 2025 TradeLeap. All rights reserved. Not financial advice.</p>
 </div>
 """, unsafe_allow_html=True)
-# Professional News Section like TradingView
-st.markdown("### 📰 Top Stories")
-
-# TradingView-style news data
-news_data = [
-    {"time": "12 hours ago", "source": "TradingView", "symbol": "TSLA", 
-     "headline": "Tesla Stock Gains as Traders Ramp Up Bets in Efforts to Hit a New All-Time High"},
-    
-    {"time": "18 hours ago", "source": "TradingView", "symbol": "EUR/USD", 
-     "headline": "Dollar Extends Gains Against Euro as Traders Price In Fed's Long-Term Guidance"},
-    
-    {"time": "3 days ago", "source": "TradingView", "symbol": "IXIC", 
-     "headline": "Nasdaq Composite Logs Fresh Record. Dow Jones and S&P 500 Join the ATH Party"},
-    
-    {"time": "4 days ago", "source": "TradingView", "symbol": "STUB", 
-     "headline": "StubHub Stock Fails to Impress in Trading Debut – Shares Slide 6.4% on IPO Day"},
-    
-    {"time": "13 hours ago", "source": "TradingView", "symbol": "QUBT", 
-     "headline": "Quantum Computing Stock Sheds 13% on $500 Million Share Offering. What's That Mean?"},
-    
-    {"time": "3 days ago", "source": "TradingView", "symbol": "BTC/USD", 
-     "headline": "Bitcoin Tops $117,000 but the Big Winners Are Two Altcoins. XRP and Solana Blast Off."},
-    
-    {"time": "4 days ago", "source": "TradingView", "symbol": "INTC", 
-     "headline": "Intel Stock Rockets 30% on $5 Billion Nvidia Investment. PCs, Get Ready for AI?"},
-    
-    {"time": "4 days ago", "source": "TradingView", "symbol": "SPX", 
-     "headline": "S&P 500 Ticks Lower After Fed's Rate Cut, Dow Jones Pops 260 Points. Why Divergence?"},
-    
-    {"time": "17 hours ago", "source": "TradingView", "symbol": "SPX", 
-     "headline": "S&P 500 Futures Dive After the Big Three Indices Settled at Record Highs. Crypto Sells Off."},
-    
-    {"time": "3 days ago", "source": "TradingView", "symbol": "USD/JPY", 
-     "headline": "Yen Gains Against Dollar as Bank of Japan Keeps Rates Steady, Plans Big ETF Sales"},
-    
-    {"time": "4 days ago", "source": "TradingView", "symbol": "GBP/USD", 
-     "headline": "Pound Dips Toward $1.36 After Bank of England Stays Put on Interest Rates"},
-    
-    {"time": "5 days ago", "source": "TradingView", "symbol": "FED", 
-     "headline": "Fed Delivers First Cut of 2025 and Projects Two More Before Year End. Here's What's Moving Most"}
-]
-
-# Display news in a professional format
-for news in news_data:
-    # Create a container for each news item
-    with st.container():
-        col1, col2 = st.columns([1, 4])
-        
-        with col1:
-            # Time and source
-            st.markdown(f"**{news['time']}**")
-            st.markdown(f"*{news['source']}*")
-            # Symbol with color coding
-            symbol_color = "green" if any(x in news['headline'].lower() for x in ['gains', 'pops', 'rockets', 'tops', 'blast']) else "red" if any(x in news['headline'].lower() for x in ['slide', 'sheds', 'dips', 'dive', 'sells']) else "blue"
-            st.markdown(f"<span style='color: {symbol_color}; font-weight: bold;'>{news['symbol']}</span>", unsafe_allow_html=True)
-        
-        with col2:
-            # Headline with better formatting
-            st.markdown(f"**{news['headline']}**")
-            
-            # Add sentiment indicator
-            if any(x in news['headline'].lower() for x in ['gains', 'pops', 'rockets', 'tops', 'blast', 'record']):
-                st.markdown("🟢 **Bullish** • High Impact")
-            elif any(x in news['headline'].lower() for x in ['slide', 'sheds', 'dips', 'dive', 'sells', 'fails']):
-                st.markdown("🔴 **Bearish** • Medium Impact")
-            else:
-                st.markdown("⚪ **Neutral** • Market News")
-        
-        st.markdown("---")
