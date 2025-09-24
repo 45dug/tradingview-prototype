@@ -3,6 +3,9 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 import time
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 # Page setup with enhanced styling
 st.set_page_config(
@@ -11,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Advanced CSS with wallpaper and header styling
+# Advanced CSS with all new features
 st.markdown("""
 <style>
     /* Main TradingView Theme with Wallpaper */
@@ -82,6 +85,158 @@ st.markdown("""
         box-shadow: 0 5px 15px rgba(41, 98, 255, 0.4);
     }
     
+    /* Top Navigation Bar */
+    .top-nav {
+        background: rgba(30, 34, 45, 0.9);
+        backdrop-filter: blur(10px);
+        padding: 0.8rem 2rem;
+        margin: -2rem -1rem 1rem -1rem;
+        border-bottom: 1px solid #2a2e39;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .nav-section {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+    }
+    
+    .nav-item {
+        color: #d1d4dc;
+        text-decoration: none;
+        font-weight: 500;
+        cursor: pointer;
+        transition: color 0.3s ease;
+    }
+    
+    .nav-item:hover {
+        color: #2962ff;
+    }
+    
+    .search-box {
+        background: rgba(42, 46, 57, 0.8);
+        border: 1px solid #3a3e49;
+        border-radius: 20px;
+        padding: 8px 15px;
+        color: #d1d4dc;
+        width: 200px;
+    }
+    
+    /* Forex Rates Section */
+    .forex-section {
+        background: rgba(30, 34, 45, 0.8);
+        border-radius: 8px;
+        padding: 15px;
+        margin: 10px 0;
+    }
+    
+    .currency-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 10px;
+        margin: 15px 0;
+    }
+    
+    .currency-item {
+        background: rgba(42, 46, 57, 0.6);
+        padding: 10px;
+        border-radius: 6px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .currency-item:hover {
+        background: rgba(58, 62, 73, 0.8);
+        transform: translateY(-2px);
+    }
+    
+    .currency-item.active {
+        background: #2962ff;
+        color: white;
+    }
+    
+    .timeframe-grid {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 5px;
+        margin: 15px 0;
+    }
+    
+    .timeframe-btn {
+        background: rgba(42, 46, 57, 0.6);
+        color: #d1d4dc;
+        border: none;
+        border-radius: 4px;
+        padding: 8px 5px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+    
+    .timeframe-btn.active {
+        background: #2962ff;
+        color: white;
+    }
+    
+    /* News Section */
+    .news-section {
+        background: rgba(30, 34, 45, 0.8);
+        border-radius: 8px;
+        padding: 20px;
+        margin: 15px 0;
+    }
+    
+    .news-item {
+        background: rgba(42, 46, 57, 0.6);
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 6px;
+        border-left: 3px solid #2962ff;
+    }
+    
+    .news-time {
+        color: #8c9baf;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+    }
+    
+    .news-headline {
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .news-source {
+        color: #26a69a;
+        font-size: 0.8rem;
+    }
+    
+    /* Economy Section */
+    .economy-section {
+        background: rgba(30, 34, 45, 0.8);
+        border-radius: 8px;
+        padding: 20px;
+        margin: 15px 0;
+    }
+    
+    .inflation-legend {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 5px;
+        margin: 15px 0;
+    }
+    
+    .legend-item {
+        padding: 8px;
+        border-radius: 4px;
+        text-align: center;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
     /* Sidebar Styling */
     .sidebar .sidebar-content {
         background-color: rgba(30, 34, 45, 0.9);
@@ -96,40 +251,6 @@ st.markdown("""
         padding: 15px;
         margin: 10px 0;
         border-left: 4px solid #2962ff;
-        backdrop-filter: blur(5px);
-    }
-    
-    /* Watchlist Items */
-    .watchlist-item {
-        background: rgba(42, 46, 57, 0.8);
-        padding: 12px;
-        margin: 8px 0;
-        border-radius: 6px;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        backdrop-filter: blur(5px);
-    }
-    
-    .watchlist-item:hover {
-        background: rgba(58, 62, 73, 0.9);
-        transform: translateX(5px);
-    }
-    
-    /* Chart Container */
-    .chart-container {
-        background: rgba(19, 23, 34, 0.9);
-        border-radius: 8px;
-        padding: 20px;
-        margin: 15px 0;
-        backdrop-filter: blur(5px);
-    }
-    
-    /* Trading Panel */
-    .trading-panel {
-        background: rgba(30, 34, 45, 0.9);
-        padding: 20px;
-        border-radius: 8px;
-        margin: 20px 0;
         backdrop-filter: blur(5px);
     }
     
@@ -148,36 +269,6 @@ st.markdown("""
         font-weight: 500;
         transition: all 0.3s ease;
     }
-    
-    .stButton>button:hover {
-        background-color: #1e52d4;
-        transform: translateY(-1px);
-    }
-    
-    .timeframe-btn {
-        background: rgba(42, 46, 57, 0.8);
-        color: #d1d4dc;
-        border: 1px solid rgba(58, 62, 73, 0.8);
-        border-radius: 4px;
-        padding: 8px 12px;
-        margin: 2px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-    
-    .timeframe-btn.active {
-        background: #2962ff;
-        color: white;
-    }
-    
-    /* Enhanced metric cards */
-    .metric-card {
-        background: rgba(30, 34, 45, 0.8);
-        border-radius: 8px;
-        padding: 15px;
-        margin: 5px;
-        border-left: 3px solid #2962ff;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -187,14 +278,15 @@ def generate_advanced_data(symbol, points=200):
     
     base_prices = {
         "AAPL": 180, "TSLA": 250, "MSFT": 420, "GOOGL": 2800,
-        "BTCUSD": 65000, "SPX": 5200, "NVDA": 120, "AMZN": 3500
+        "BTCUSD": 65000, "SPX": 5200, "NVDA": 120, "AMZN": 3500,
+        "EURUSD": 1.08, "GBPUSD": 1.26, "USDJPY": 147.5, "USDCHF": 0.88
     }
     base_price = base_prices.get(symbol, 100)
     
     dates = [datetime.now() - timedelta(minutes=x) for x in range(points, 0, -1)]
     
     # Generate realistic price movement with volatility
-    returns = np.random.normal(0, 0.002, points)  # More realistic returns
+    returns = np.random.normal(0, 0.002, points)
     prices = base_price * np.exp(np.cumsum(returns))
     
     # Create OHLC data
@@ -228,11 +320,9 @@ def generate_advanced_data(symbol, points=200):
 
 # Calculate technical indicators
 def calculate_indicators(df):
-    # Simple Moving Average
     df['sma_20'] = df['close'].rolling(window=20).mean()
     df['sma_50'] = df['close'].rolling(window=50).mean()
     
-    # RSI
     delta = df['close'].diff()
     gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
     loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
@@ -241,19 +331,36 @@ def calculate_indicators(df):
     
     return df
 
+# Generate inflation data for economy section
+def generate_inflation_data():
+    countries = ['USA', 'UK', 'Germany', 'France', 'Japan', 'Canada', 'Australia', 'Brazil', 'India', 'China']
+    inflation_rates = np.random.uniform(-2, 25, len(countries))
+    return pd.DataFrame({'Country': countries, 'Inflation': inflation_rates})
+
+# Generate forex news data
+def generate_forex_news():
+    return [
+        {"time": "yesterday - Dow Jones Newswires", "headline": "Sterling Gains 0.31% to $1.3514 — Data Talk", "source": "DJN"},
+        {"time": "yesterday - Dow Jones Newswires", "headline": "The WSJ Dollar Index Falls 0.23% to 94.77 — Data Talk", "source": "DJN"},
+        {"time": "yesterday - Dow Jones Newswires", "headline": "Dollar Loses 0.17% to 147.72 Yen — Data Talk", "source": "DJN"},
+        {"time": "yesterday - Dow Jones Newswires", "headline": "Dollar Gains 0.27% to 1.3819 Canadian Dollars — Data Talk", "source": "DJN"},
+        {"time": "yesterday - Dow Jones Newswires", "headline": "Euro Gains 0.49% to $1.1804 — Data Talk", "source": "DJN"},
+        {"time": "yesterday - Dow Jones Newswires", "headline": "Dollar Loses 0.27% to 18.3585 Mexican Pesos — Data Talk", "source": "DJN"},
+        {"time": "yesterday - Reuters", "headline": "Brazil's central bank to auction up to $2 billion with repurchase deal", "source": "Reuters"},
+        {"time": "2 days ago - Bloomberg", "headline": "New Zealand to make an announcement related to central bank on Wednesday", "source": "Bloomberg"}
+    ]
+
 # Initialize session state
 if 'current_symbol' not in st.session_state:
-    st.session_state.current_symbol = "AAPL"
+    st.session_state.current_symbol = "EURUSD"
 if 'chart_data' not in st.session_state:
-    st.session_state.chart_data = generate_advanced_data("AAPL")
+    st.session_state.chart_data = generate_advanced_data("EURUSD")
 if 'is_live' not in st.session_state:
     st.session_state.is_live = False
 if 'timeframe' not in st.session_state:
-    st.session_state.timeframe = "1H"
-if 'chart_type' not in st.session_state:
-    st.session_state.chart_type = "Line"
-if 'indicators' not in st.session_state:
-    st.session_state.indicators = {"SMA": True, "RSI": False}
+    st.session_state.timeframe = "1D"
+if 'base_currency' not in st.session_state:
+    st.session_state.base_currency = "EUR"
 
 # Calculate indicators
 st.session_state.chart_data = calculate_indicators(st.session_state.chart_data)
@@ -270,146 +377,237 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Sidebar - Advanced TradingView Interface
-with st.sidebar:
-    st.markdown("<h1 style='color: #2962ff;'>TradeLeap Pro</h1>", unsafe_allow_html=True)
-    st.markdown("---")
+# Top Navigation Bar
+st.markdown("""
+<div class="top-nav">
+    <div class="nav-section">
+        <div class="nav-item">Search (3K)</div>
+        <div class="nav-item">Products</div>
+        <div class="nav-item">Community</div>
+        <div class="nav-item">Markets</div>
+        <div class="nav-item">Brokers</div>
+        <div class="nav-item">More</div>
+    </div>
+    <div class="nav-section">
+        <div class="nav-item">EN</div>
+        <button class="cta-button" style="padding: 8px 20px; font-size: 0.9rem;">Get started</button>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# Main content layout
+col1, col2, col3 = st.columns([2, 1, 1])
+
+with col1:
+    # Forex Rates Section
+    st.markdown("""
+    <div class="forex-section">
+        <h3>💱 Forex Rates</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h4>Base Currency: {}</h4>
+            <div style="color: #8c9baf; font-size: 0.9rem;">See all rates ></div>
+        </div>
+    </div>
+    """.format(st.session_state.base_currency), unsafe_allow_html=True)
     
-    # Advanced Watchlist
-    st.markdown("### 📈 Advanced Watchlist")
+    # Base Currency Selection
+    base_currencies = ["EUR", "USD", "GBP", "JPY", "CHF", "AUD", "CNY", "CAD"]
+    base_cols = st.columns(8)
+    for i, currency in enumerate(base_currencies):
+        with base_cols[i]:
+            if st.button(currency, key=f"base_{currency}", use_container_width=True):
+                st.session_state.base_currency = currency
+                st.session_state.current_symbol = f"{currency}USD" if currency != "USD" else "EURUSD"
+                st.session_state.chart_data = generate_advanced_data(st.session_state.current_symbol)
+                st.rerun()
     
-    watchlist_data = {
-        "AAPL": {"name": "Apple Inc.", "price": 182.35, "change": +1.25, "change_pct": +0.69, "volume": "25.3M"},
-        "TSLA": {"name": "Tesla Inc.", "price": 248.90, "change": +5.60, "change_pct": +2.30, "volume": "18.7M"},
-        "MSFT": {"name": "Microsoft", "price": 421.80, "change": -2.30, "change_pct": -0.54, "volume": "12.1M"},
-        "GOOGL": {"name": "Google", "price": 2798.30, "change": +15.80, "change_pct": +0.57, "volume": "8.9M"},
-        "BTCUSD": {"name": "Bitcoin", "price": 65123.45, "change": +1234.56, "change_pct": +1.93, "volume": "32.5B"}
-    }
+    # Quote Currencies Display
+    quote_currencies = ["USD", "GBP", "JPY", "CHF", "AUD", "CNY", "CAD"]
+    quote_cols = st.columns(7)
     
-    for symbol, data in watchlist_data.items():
-        change_color = "green" if data["change"] >= 0 else "red"
-        change_icon = "▲" if data["change"] >= 0 else "▼"
-        
-        if st.button(
-            f"""**{symbol}** - ${data['price']:.2f}  
-            <span style='color: {change_color}'>{change_icon} {data['change_pct']:.2f}%</span>""",
-            key=f"watch_{symbol}", 
-            use_container_width=True
-        ):
-            st.session_state.current_symbol = symbol
-            st.session_state.chart_data = generate_advanced_data(symbol)
-            st.session_state.chart_data = calculate_indicators(st.session_state.chart_data)
-            st.rerun()
+    for i, currency in enumerate(quote_currencies):
+        with quote_cols[i]:
+            if currency != st.session_state.base_currency:
+                # Generate realistic exchange rate
+                rate = np.random.uniform(0.8, 1.5) if st.session_state.base_currency == "EUR" else np.random.uniform(100, 150) if currency == "JPY" else np.random.uniform(0.7, 2.0)
+                change = np.random.uniform(-0.02, 0.02)
+                change_pct = change * 100
+                
+                st.metric(
+                    label=currency,
+                    value=f"{rate:.4f}",
+                    delta=f"{change_pct:+.2f}%",
+                    delta_color="normal"
+                )
     
-    st.markdown("---")
+    # Timeframe Selection
+    st.markdown("""
+    <div style="margin: 20px 0;">
+        <h4>Timeframe</h4>
+    </div>
+    """, unsafe_allow_html=True)
     
-    # Advanced Chart Controls
-    st.markdown("### ⚙️ Chart Configuration")
+    timeframes = ["1D", "1W", "1M", "3M", "6M", "1Y", "YTD", "5Y", "All"]
+    tf_cols = st.columns(9)
     
-    col1, col2 = st.columns(2)
-    with col1:
-        chart_type = st.selectbox("Chart Type", ["Line", "Candlestick", "Area", "Heikin Ashi"])
-    with col2:
-        timeframe = st.selectbox("Timeframe", ["1m", "5m", "15m", "30m", "1H", "4H", "1D", "1W"])
+    for i, tf in enumerate(timeframes):
+        with tf_cols[i]:
+            if st.button(tf, key=f"time_{tf}", use_container_width=True):
+                st.session_state.timeframe = tf
+                st.rerun()
     
-    st.markdown("---")
+    # Main Chart Display
+    st.markdown("### 📈 Advanced Chart")
     
-    # Technical Indicators Panel
-    st.markdown("### 📊 Technical Indicators")
+    # Create interactive chart with Plotly
+    fig = go.Figure()
     
-    indicators = {
-        "Moving Average (20)": "sma_20",
-        "Moving Average (50)": "sma_50", 
-        "RSI (14)": "rsi",
-        "Bollinger Bands": "bb",
-        "MACD": "macd",
-        "Volume Profile": "volume"
-    }
+    # Add candlestick chart
+    fig.add_trace(go.Candlestick(
+        x=st.session_state.chart_data['timestamp'],
+        open=st.session_state.chart_data['open'],
+        high=st.session_state.chart_data['high'],
+        low=st.session_state.chart_data['low'],
+        close=st.session_state.chart_data['close'],
+        name=st.session_state.current_symbol
+    ))
     
-    for name, key in indicators.items():
-        if st.checkbox(name, value=(name in ["Moving Average (20)"])):
-            if name == "RSI (14)":
-                st.slider("RSI Levels", 20, 80, (30, 70), key="rsi_levels")
+    # Add moving averages
+    fig.add_trace(go.Scatter(
+        x=st.session_state.chart_data['timestamp'],
+        y=st.session_state.chart_data['sma_20'],
+        name='SMA 20',
+        line=dict(color='orange', width=1)
+    ))
     
-    st.markdown("---")
+    fig.add_trace(go.Scatter(
+        x=st.session_state.chart_data['timestamp'],
+        y=st.session_state.chart_data['sma_50'],
+        name='SMA 50',
+        line=dict(color='blue', width=1)
+    ))
     
-    # Drawing Tools
-    st.markdown("### 🛠️ Drawing Tools")
-    drawing_tools = ["Trend Line", "Horizontal Line", "Fibonacci", "Text", "Arrow"]
-    for tool in drawing_tools:
-        st.button(f"• {tool}", key=f"draw_{tool}", use_container_width=True)
+    fig.update_layout(
+        height=500,
+        title=f"{st.session_state.current_symbol} - {st.session_state.timeframe}",
+        xaxis_title="Time",
+        yaxis_title="Price",
+        template="plotly_dark",
+        showlegend=True
+    )
     
-    st.markdown("---")
+    st.plotly_chart(fig, use_container_width=True)
+
+with col2:
+    # Forex News Section
+    st.markdown("""
+    <div class="news-section">
+        <h3>📰 Forex News</h3>
+        <div style="color: #8c9baf; font-size: 0.9rem; margin-bottom: 15px;">
+            Sign in to read exclusive news >
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     
-    # Market Overview
-    st.markdown("### 🌍 Market Overview")
-    markets = [
-        ("Crypto Cap", "3.91T", "-1.26%", "red"),
-        ("DXY", "97.789", "+0.15%", "green"),
-        ("Oil", "62.77", "+0.59%", "green"),
-        ("Gold", "2345.60", "-0.45%", "red")
+    news_data = generate_forex_news()
+    
+    for i, news in enumerate(news_data[:4]):  # Show first 4 news items
+        st.markdown(f"""
+        <div class="news-item">
+            <div class="news-time">{news['time']}</div>
+            <div class="news-headline">{news['headline']}</div>
+            <div class="news-source">{news['source']}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    if st.button("Keep reading >", use_container_width=True):
+        st.session_state.show_more_news = not st.session_state.get('show_more_news', False)
+    
+    if st.session_state.get('show_more_news', False):
+        for i, news in enumerate(news_data[4:]):
+            st.markdown(f"""
+            <div class="news-item">
+                <div class="news-time">{news['time']}</div>
+                <div class="news-headline">{news['headline']}</div>
+                <div class="news-source">{news['source']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+with col3:
+    # Economy Section
+    st.markdown("""
+    <div class="economy-section">
+        <h3>🌍 Economy</h3>
+        <div style="color: #8c9baf; font-size: 0.9rem; margin-bottom: 15px;">
+            Global inflation map >
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Inflation Legend
+    st.markdown("""
+    <div class="inflation-legend">
+        <div class="legend-item" style="background: #1a237e; color: white;">Less than 0%</div>
+        <div class="legend-item" style="background: #283593; color: white;">0-3%</div>
+        <div class="legend-item" style="background: #303f9f; color: white;">3-7%</div>
+        <div class="legend-item" style="background: #5c6bc0; color: white;">7-12%</div>
+        <div class="legend-item" style="background: #7986cb; color: white;">12-25%</div>
+        <div class="legend-item" style="background: #9fa8da; color: #1a237e;">More than 25%</div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Inflation Data Visualization
+    inflation_data = generate_inflation_data()
+    
+    # Create inflation chart
+    fig_inflation = px.choropleth(
+        inflation_data,
+        locations="Country",
+        locationmode="country names",
+        color="Inflation",
+        color_continuous_scale="Blues",
+        title="Global Inflation Rates",
+        range_color=[-2, 25]
+    )
+    
+    fig_inflation.update_layout(
+        height=300,
+        geo=dict(
+            showframe=False,
+            showcoastlines=True,
+            projection_type='equirectangular'
+        ),
+        margin=dict(l=0, r=0, t=30, b=0)
+    )
+    
+    st.plotly_chart(fig_inflation, use_container_width=True)
+    
+    # Products Section
+    st.markdown("""
+    <div class="news-section">
+        <h3>📦 Products</h3>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    products = [
+        {"name": "Product Sheet", "year": "2022", "time": "15:00"},
+        {"name": "Community Marks", "year": "", "time": "15:00"},
+        {"name": "Markets Brokers More", "year": "", "time": "10:00"}
     ]
     
-    for name, value, change, color in markets:
-        st.markdown(f"**{name}**: {value} <span class='{color}'>{change}</span>", unsafe_allow_html=True)
+    for product in products:
+        st.markdown(f"""
+        <div class="news-item">
+            <div class="news-headline">{product['name']}</div>
+            <div style="display: flex; justify-content: space-between;">
+                <div class="news-source">{product['year']}</div>
+                <div class="news-time">{product['time']}</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-# Main Trading Interface
-st.markdown(f"## 📈 {st.session_state.current_symbol} - {watchlist_data[st.session_state.current_symbol]['name']}")
-
-# Advanced Price Header
-current_data = st.session_state.chart_data.iloc[-1]
-prev_data = st.session_state.chart_data.iloc[-2]
-price_change = current_data['close'] - prev_data['close']
-price_change_pct = (price_change / prev_data['close']) * 100
-
-col1, col2, col3, col4, col5, col6 = st.columns(6)
-with col1:
-    st.metric("Price", f"${current_data['close']:.2f}", f"{price_change_pct:+.2f}%")
-with col2:
-    st.metric("Open", f"${current_data['open']:.2f}")
-with col3:
-    st.metric("High", f"${current_data['high']:.2f}")
-with col4:
-    st.metric("Low", f"${current_data['low']:.2f}")
-with col5:
-    st.metric("Volume", f"{current_data['volume']:,}")
-with col6:
-    st.metric("Change", f"${price_change:+.2f}", f"{price_change_pct:+.2f}%")
-
-# Timeframe Selection Buttons
-st.markdown("### Timeframe")
-timeframes = ["1m", "5m", "15m", "30m", "1H", "4H", "1D", "1W"]
-cols = st.columns(8)
-for i, tf in enumerate(timeframes):
-    with cols[i]:
-        if st.button(tf, key=f"tf_{tf}", use_container_width=True):
-            st.session_state.timeframe = tf
-            st.info(f"Switched to {tf} timeframe")
-
-# Advanced Chart Display
-st.markdown("### Advanced Chart")
-chart_container = st.container()
-
-with chart_container:
-    # Display main price chart
-    if chart_type == "Candlestick":
-        # For candlestick, we'll use a line chart as fallback
-        chart_data = st.session_state.chart_data[['timestamp', 'open', 'high', 'low', 'close']].set_index('timestamp')
-        st.line_chart(chart_data, height=500)
-    else:
-        chart_data = st.session_state.chart_data.set_index('timestamp')[['close']]
-        if chart_type == "Area":
-            st.area_chart(chart_data, height=500)
-        else:
-            st.line_chart(chart_data, height=500)
-    
-    # Display SMA indicators if enabled
-    if st.session_state.indicators.get("SMA", True):
-        sma_data = st.session_state.chart_data.set_index('timestamp')[['sma_20', 'sma_50']]
-        st.line_chart(sma_data, height=200)
-
-# Advanced Trading Panel
-st.markdown("### 🎯 Advanced Trading Panel")
+# Trading Panel at the bottom
+st.markdown("### 🎯 Trading Panel")
 
 tcol1, tcol2, tcol3, tcol4, tcol5, tcol6, tcol7 = st.columns(7)
 
@@ -424,118 +622,19 @@ with tcol2:
         st.session_state.chart_data = calculate_indicators(st.session_state.chart_data)
         st.rerun()
 
-with tcol3:
-    order_type = st.selectbox("Type", ["Market", "Limit", "Stop", "Stop Limit"], label_visibility="collapsed")
-
-with tcol4:
-    quantity = st.number_input("Quantity", min_value=1, value=100, label_visibility="collapsed")
-
-with tcol5:
-    price = st.number_input("Price", value=float(current_data['close']), label_visibility="collapsed")
-
 with tcol6:
     if st.button("🟢 BUY", type="primary", use_container_width=True):
+        current_data = st.session_state.chart_data.iloc[-1]
+        quantity = 100
         order_value = quantity * current_data['close']
-        st.success(f"✅ BUY {quantity} {st.session_state.current_symbol} @ ${current_data['close']:.2f} | Total: ${order_value:,.2f}")
+        st.success(f"✅ BUY {quantity} {st.session_state.current_symbol} @ ${current_data['close']:.2f}")
 
 with tcol7:
     if st.button("🔴 SELL", type="secondary", use_container_width=True):
+        current_data = st.session_state.chart_data.iloc[-1]
+        quantity = 100
         order_value = quantity * current_data['close']
-        st.error(f"✅ SELL {quantity} {st.session_state.current_symbol} @ ${current_data['close']:.2f} | Total: ${order_value:,.2f}")
-
-# Order Book Simulation
-st.markdown("### 📊 Order Book")
-ob_col1, ob_col2 = st.columns(2)
-
-with ob_col1:
-    st.markdown("**Bids (Buy Orders)**")
-    for i in range(5):
-        price_level = current_data['close'] * (1 - (i+1)*0.001)
-        size = np.random.randint(100, 1000)
-        st.write(f"${price_level:.2f} | {size} shares")
-
-with ob_col2:
-    st.markdown("**Asks (Sell Orders)**")
-    for i in range(5):
-        price_level = current_data['close'] * (1 + (i+1)*0.001)
-        size = np.random.randint(100, 1000)
-        st.write(f"${price_level:.2f} | {size} shares")
-
-# Advanced Live Data Simulation
-if st.session_state.is_live:
-    progress_bar = st.progress(0)
-    status_text = st.empty()
-    live_data = st.empty()
-    
-    for i in range(15):
-        if not st.session_state.is_live:
-            break
-            
-        # Generate new realistic data point
-        last_close = st.session_state.chart_data['close'].iloc[-1]
-        new_return = np.random.normal(0, 0.0015)  # Realistic volatility
-        new_close = last_close * (1 + new_return)
-        
-        new_row = pd.DataFrame({
-            'timestamp': [datetime.now()],
-            'open': [last_close],
-            'high': [max(last_close, new_close) * (1 + abs(np.random.normal(0, 0.002)))],
-            'low': [min(last_close, new_close) * (1 - abs(np.random.normal(0, 0.002)))],
-            'close': [new_close],
-            'volume': [np.random.randint(1000000, 3000000)]
-        })
-        
-        st.session_state.chart_data = pd.concat([
-            st.session_state.chart_data.iloc[1:],
-            new_row
-        ], ignore_index=True)
-        
-        # Recalculate indicators
-        st.session_state.chart_data = calculate_indicators(st.session_state.chart_data)
-        
-        progress_bar.progress((i + 1) / 15)
-        current_change = (new_close - last_close) / last_close * 100
-        status_text.text(f"📡 Live Trading: {st.session_state.current_symbol} | Price: ${new_close:.2f} | Change: {current_change:+.2f}%")
-        time.sleep(0.8)
-    
-    progress_bar.empty()
-    status_text.empty()
-    st.session_state.is_live = False
-    st.rerun()
-
-# Market Depth & Analytics
-st.markdown("### 📈 Market Analytics")
-
-ana_col1, ana_col2, ana_col3 = st.columns(3)
-
-with ana_col1:
-    st.metric("RSI (14)", f"{st.session_state.chart_data['rsi'].iloc[-1]:.1f}")
-    st.metric("Volatility", "2.3%")
-    st.metric("Market Sentiment", "Bullish")
-
-with ana_col2:
-    st.metric("24h Volume", "25.3M")
-    st.metric("Avg. Spread", "0.02%")
-    st.metric("Liquidity", "High")
-
-with ana_col3:
-    st.metric("Support Level", f"${current_data['close']*0.98:.2f}")
-    st.metric("Resistance Level", f"${current_data['close']*1.02:.2f}")
-    st.metric("Trend", "Upward")
-
-# News & Alerts
-st.markdown("### 📰 Real-time News & Alerts")
-
-news_items = [
-    {"symbol": "AAPL", "headline": "Apple announces breakthrough AI chip", "impact": "High", "sentiment": "Bullish"},
-    {"symbol": "TSLA", "headline": "Tesla Model 3 deliveries beat estimates", "impact": "Medium", "sentiment": "Bullish"},
-    {"symbol": "BTCUSD", "headline": "Bitcoin ETF volumes hit record high", "impact": "High", "sentiment": "Bullish"}
-]
-
-for news in news_items:
-    with st.expander(f"🚨 {news['symbol']}: {news['headline']}"):
-        st.write(f"**Impact:** {news['impact']} | **Sentiment:** {news['sentiment']}")
-        st.write("Market analysts expect positive price movement following this news.")
+        st.error(f"✅ SELL {quantity} {st.session_state.current_symbol} @ ${current_data['close']:.2f}")
 
 # Footer
 st.markdown("---")
