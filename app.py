@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 import time
-import plotly.express as px
 
 # Page setup with enhanced styling
 st.set_page_config(
@@ -131,37 +130,51 @@ st.markdown("""
         font-size: 0.8rem;
         font-weight: 500;
     }
+    
+    .heatmap-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+        margin: 20px 0;
+    }
+    
+    .country-cell {
+        background: rgba(42, 46, 57, 0.8);
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .country-cell:hover {
+        transform: scale(1.05);
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# Generate global inflation data for heat map
+# Generate global inflation data for heat map (using text-based visualization)
 def generate_global_inflation_data():
     countries = [
-        'United States', 'China', 'Japan', 'Germany', 'United Kingdom', 
-        'France', 'India', 'Brazil', 'Canada', 'Australia', 'Russia',
-        'South Korea', 'Mexico', 'Indonesia', 'Netherlands', 'Saudi Arabia',
-        'Turkey', 'Switzerland', 'Argentina', 'South Africa'
+        'USA', 'China', 'Japan', 'Germany', 'UK', 
+        'France', 'India', 'Brazil', 'Canada', 'Australia',
+        'Russia', 'S.Korea', 'Mexico', 'Indonesia', 'S.Arabia',
+        'Turkey', 'Switzerland', 'Argentina', 'S.Africa', 'Italy'
     ]
     
-    inflation_rates = []
+    inflation_data = {}
     for country in countries:
-        if country in ['United States', 'Germany', 'Japan', 'Switzerland']:
+        if country in ['USA', 'Germany', 'Japan', 'Switzerland']:
             base_rate = np.random.uniform(2.0, 4.0)
         elif country in ['Turkey', 'Argentina']:
             base_rate = np.random.uniform(15.0, 25.0)
-        elif country in ['United Kingdom', 'Canada', 'Australia']:
+        elif country in ['UK', 'Canada', 'Australia']:
             base_rate = np.random.uniform(3.0, 6.0)
         else:
-            base_rate = np.random.uniform(2.0, 7.0)
+            base_rate = np.random.uniform(2.0, 8.0)
         
-        inflation_rates.append(round(base_rate, 1))
+        inflation_data[country] = round(base_rate, 1)
     
-    return pd.DataFrame({
-        'Country': countries,
-        'Inflation Rate': inflation_rates,
-        'ISO_Code': ['USA', 'CHN', 'JPN', 'DEU', 'GBR', 'FRA', 'IND', 'BRA', 'CAN', 'AUS', 
-                    'RUS', 'KOR', 'MEX', 'IDN', 'NLD', 'SAU', 'TUR', 'CHE', 'ARG', 'ZAF']
-    })
+    return inflation_data
 
 # Generate trading data
 def generate_advanced_data(symbol, points=200):
@@ -177,14 +190,9 @@ def generate_advanced_data(symbol, points=200):
     returns = np.random.normal(0, 0.002, points)
     prices = base_price * np.exp(np.cumsum(returns))
     
-    closes = []
-    for i in range(points):
-        close_price = prices[i]
-        closes.append(close_price)
-    
     return pd.DataFrame({
         'timestamp': dates,
-        'close': closes,
+        'close': prices,
         'volume': np.random.randint(1000000, 5000000, points)
     })
 
@@ -195,9 +203,9 @@ def calculate_indicators(df):
 
 def generate_forex_news():
     return [
-        {"time": "yesterday - Dow Jones Newswires", "headline": "Sterling Gains 0.31% to $1.3514", "source": "DJN"},
-        {"time": "yesterday - Dow Jones Newswires", "headline": "The WSJ Dollar Index Falls 0.23% to 94.77", "source": "DJN"},
-        {"time": "yesterday - Dow Jones Newswires", "headline": "Dollar Loses 0.17% to 147.72 Yen", "source": "DJN"},
+        {"time": "2 hours ago", "headline": "Sterling Gains 0.31% to $1.3514", "source": "DJN"},
+        {"time": "3 hours ago", "headline": "Dollar Index Falls 0.23% to 94.77", "source": "DJN"},
+        {"time": "4 hours ago", "headline": "Yen Strengthens Amid Bank of Japan Meeting", "source": "Reuters"},
     ]
 
 # Initialize session state
@@ -231,12 +239,11 @@ st.markdown("""
 st.markdown("""
 <div class="top-nav">
     <div style="display: flex; align-items: center; gap: 2rem;">
-        <div style="color: #d1d4dc; font-weight: 500;">Search (3K)</div>
+        <div style="color: #d1d4dc; font-weight: 500;">Search</div>
         <div style="color: #d1d4dc; font-weight: 500;">Products</div>
         <div style="color: #d1d4dc; font-weight: 500;">Community</div>
         <div style="color: #d1d4dc; font-weight: 500;">Markets</div>
         <div style="color: #d1d4dc; font-weight: 500;">Brokers</div>
-        <div style="color: #d1d4dc; font-weight: 500;">More</div>
     </div>
     <div style="display: flex; align-items: center; gap: 1rem;">
         <div style="color: #d1d4dc; font-weight: 500;">EN</div>
@@ -287,11 +294,23 @@ with col1:
     if not st.session_state.chart_data.empty:
         chart_data = st.session_state.chart_data.set_index('timestamp')[['close']]
         st.line_chart(chart_data, height=400)
+    
+    # Technical indicators
+    if not st.session_state.chart_data.empty:
+        current_data = st.session_state.chart_data.iloc[-1]
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Current Price", f"${current_data['close']:.4f}")
+        with col2:
+            st.metric("20 SMA", f"${current_data.get('sma_20', current_data['close']):.4f}")
+        with col3:
+            st.metric("Volume", f"{current_data['volume']/1000000:.1f}M")
+    
     st.markdown('</div>', unsafe_allow_html=True)
 
 with col2:
     st.markdown('<div class="content-section">', unsafe_allow_html=True)
-    st.markdown("### 📰 Forex News")
+    st.markdown("### 📰 Market News")
     
     news_data = generate_forex_news()
     for news in news_data:
@@ -302,68 +321,100 @@ with col2:
             <div style="color: #26a69a; font-size: 0.8rem;">{news['source']}</div>
         </div>
         """, unsafe_allow_html=True)
+    
+    st.markdown("#### 💡 Trading Ideas")
+    ideas = [
+        {"symbol": "EUR/USD", "action": "BUY", "confidence": 75},
+        {"symbol": "GBP/JPY", "action": "SELL", "confidence": 68},
+        {"symbol": "USD/CAD", "action": "HOLD", "confidence": 82}
+    ]
+    
+    for idea in ideas:
+        color = "#26a69a" if idea["confidence"] > 70 else "#ffa726"
+        st.markdown(f"""
+        <div style="background: rgba(42,46,57,0.6); padding: 12px; margin: 8px 0; border-radius: 6px;">
+            <div style="display: flex; justify-content: space-between;">
+                <strong>{idea['symbol']}</strong>
+                <span style="color: {color}; font-weight: 600;">{idea['action']}</span>
+            </div>
+            <div style="color: #8c9baf; font-size: 0.8rem;">Confidence: {idea['confidence']}%</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
     st.markdown('</div>', unsafe_allow_html=True)
 
 with col3:
     st.markdown('<div class="content-section">', unsafe_allow_html=True)
-    st.markdown("### 🌍 Economy")
-    st.markdown('<div style="color: #8c9baf; font-size: 0.9rem; margin-bottom: 15px;">Global inflation map ></div>', unsafe_allow_html=True)
+    st.markdown("### 🌍 Global Economy")
+    st.markdown('<div style="color: #8c9baf; font-size: 0.9rem; margin-bottom: 15px;">Inflation Heat Map</div>', unsafe_allow_html=True)
     
     # Inflation Legend
     st.markdown("""
     <div class="inflation-legend">
-        <div class="legend-item" style="background: #1a237e; color: white;">&lt; 0%</div>
-        <div class="legend-item" style="background: #283593; color: white;">0-3%</div>
-        <div class="legend-item" style="background: #303f9f; color: white;">3-7%</div>
-        <div class="legend-item" style="background: #5c6bc0; color: white;">7-12%</div>
-        <div class="legend-item" style="background: #7986cb; color: white;">12-25%</div>
-        <div class="legend-item" style="background: #9fa8da; color: #1a237e;">&gt; 25%</div>
+        <div class="legend-item" style="background: #1a237e; color: white;">&lt; 3%</div>
+        <div class="legend-item" style="background: #283593; color: white;">3-5%</div>
+        <div class="legend-item" style="background: #303f9f; color: white;">5-7%</div>
+        <div class="legend-item" style="background: #5c6bc0; color: white;">7-10%</div>
+        <div class="legend-item" style="background: #7986cb; color: white;">10-15%</div>
+        <div class="legend-item" style="background: #9fa8da; color: #1a237e;">&gt; 15%</div>
     </div>
     """, unsafe_allow_html=True)
     
-    # Global Heat Map
-    st.markdown('<div class="heatmap-container">', unsafe_allow_html=True)
-    st.markdown("#### 🌡️ Global Inflation Heat Map")
+    # Text-based Heat Map Grid
+    st.markdown("#### 🌡️ Global Inflation Rates")
+    st.markdown('<div class="heatmap-grid">', unsafe_allow_html=True)
     
-    # Create the choropleth map with fixed syntax
-    fig = px.choropleth(
-        inflation_data,
-        locations="ISO_Code",
-        color="Inflation Rate",
-        hover_name="Country",
-        hover_data={"Inflation Rate": True},
-        color_continuous_scale="Blues",
-        range_color=[0, 25],
-        title="Global Inflation Rates (%)",
-        height=300
-    )
+    # Create a grid of country cells with color coding
+    countries = list(inflation_data.keys())
+    for i in range(0, min(20, len(countries)), 5):
+        cols = st.columns(5)
+        for j in range(5):
+            if i + j < len(countries):
+                country = countries[i + j]
+                rate = inflation_data[country]
+                
+                # Determine color based on inflation rate
+                if rate < 3:
+                    color = "#1a237e"
+                elif rate < 5:
+                    color = "#283593"
+                elif rate < 7:
+                    color = "#303f9f"
+                elif rate < 10:
+                    color = "#5c6bc0"
+                elif rate < 15:
+                    color = "#7986cb"
+                else:
+                    color = "#9fa8da"
+                
+                with cols[j]:
+                    st.markdown(f"""
+                    <div class="country-cell" style="border-left: 4px solid {color};">
+                        <div style="font-weight: 600; font-size: 0.9rem;">{country}</div>
+                        <div style="font-size: 1.1rem; font-weight: 700; color: {color};">{rate}%</div>
+                    </div>
+                    """, unsafe_allow_html=True)
     
-    fig.update_layout(
-        geo=dict(
-            showframe=False,
-            showcoastlines=True,
-            projection_type='natural earth'
-        ),
-        margin=dict(l=0, r=0, t=30, b=0),
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(color='white')
-    )
-    
-    st.plotly_chart(fig, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Top countries by inflation
-    st.markdown("#### 📊 Highest Inflation Rates")
-    top_inflation = inflation_data.nlargest(5, 'Inflation Rate')
+    # Economic indicators
+    st.markdown("#### 📊 Key Indicators")
+    indicators = [
+        {"name": "Global GDP Growth", "value": "3.1%", "change": "-0.2%"},
+        {"name": "Unemployment Rate", "value": "5.2%", "change": "+0.1%"},
+        {"name": "Oil Prices", "value": "$78.30", "change": "+1.8%"},
+        {"name": "Gold Prices", "value": "$1,842", "change": "-0.5%"}
+    ]
     
-    for _, country in top_inflation.iterrows():
-        rate = country['Inflation Rate']
-        color = "#ef5350" if rate > 12 else "#ffa726" if rate > 7 else "#26a69a"
+    for indicator in indicators:
+        change_color = "green" if "-" in indicator["change"] else "red" if "+" in indicator["change"] else "gray"
         st.markdown(f"""
-        <div style="display: flex; justify-content: space-between; padding: 8px; background: rgba(42,46,57,0.6); margin: 5px 0; border-radius: 4px;">
-            <span>{country['Country']}</span>
-            <span style="color: {color}; font-weight: 600;">{rate}%</span>
+        <div style="display: flex; justify-content: space-between; padding: 10px; background: rgba(42,46,57,0.6); margin: 5px 0; border-radius: 4px;">
+            <span>{indicator['name']}</span>
+            <div>
+                <span style="font-weight: 600;">{indicator['value']}</span>
+                <span style="color: {change_color}; margin-left: 10px;">{indicator['change']}</span>
+            </div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -376,6 +427,12 @@ col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
 with col1:
     if st.button("⏸️" if st.session_state.is_live else "▶️", use_container_width=True):
         st.session_state.is_live = not st.session_state.is_live
+        st.rerun()
+
+with col2:
+    if st.button("🔄", use_container_width=True):
+        st.session_state.chart_data = generate_advanced_data(st.session_state.current_symbol)
+        st.session_state.chart_data = calculate_indicators(st.session_state.chart_data)
         st.rerun()
 
 with col6:
@@ -393,8 +450,16 @@ with col7:
 # Footer
 st.markdown("---")
 st.markdown("""
-<div style='text-align: center; color: #6a737d;'>
-    <p>TradeLeap Pro • Look First, Then Leap • Real-time Data • Professional Charts</p>
-    <p>© 2025 TradeLeap. All rights reserved. Not financial advice.</p>
+<div style='text-align: center; color: #6a737d; padding: 2rem;'>
+    <h3>Start Your Trading Journey Today</h3>
+    <p>Professional tools for informed trading decisions</p>
+    <button style="background: linear-gradient(45deg, #2962ff, #00acc1); color: white; border: none; 
+                   padding: 12px 30px; border-radius: 25px; font-weight: 600; cursor: pointer; margin: 10px;">
+        Create Free Account
+    </button>
+    <div style="margin-top: 20px;">
+        <p>TradeLeap Pro • Look First, Then Leap • Real-time Data • Professional Charts</p>
+        <p>© 2025 TradeLeap. All rights reserved. Not financial advice.</p>
+    </div>
 </div>
 """, unsafe_allow_html=True)
