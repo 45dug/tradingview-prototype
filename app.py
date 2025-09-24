@@ -3,7 +3,8 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 import time
-import base64
+import plotly.express as px
+import plotly.graph_objects as go
 
 # Page setup with enhanced styling
 st.set_page_config(
@@ -43,6 +44,15 @@ def add_bg_image():
             border-radius: 10px;
             margin: 20px;
             padding: 20px;
+        }}
+        
+        /* Heat map container styling */
+        .heatmap-container {{
+            background: rgba(42, 46, 57, 0.6);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }}
         </style>
         """,
@@ -167,14 +177,29 @@ st.markdown("""
         border: 1px solid rgba(255, 255, 255, 0.1);
     }
     
-    /* Rest of your existing styles remain the same */
-    .forex-section, .news-section, .economy-section {
+    /* Economy section specific styling */
+    .economy-section {
         background: rgba(30, 34, 45, 0.8);
         border-radius: 8px;
         padding: 20px;
         margin: 15px 0;
         backdrop-filter: blur(5px);
         border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .inflation-legend {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 5px;
+        margin: 15px 0;
+    }
+    
+    .legend-item {
+        padding: 8px;
+        border-radius: 4px;
+        text-align: center;
+        font-size: 0.8rem;
+        font-weight: 500;
     }
     
     .news-item {
@@ -225,6 +250,47 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+# Generate global inflation data for heat map
+def generate_global_inflation_data():
+    countries = [
+        'United States', 'China', 'Japan', 'Germany', 'United Kingdom', 
+        'France', 'India', 'Brazil', 'Canada', 'Australia', 'Russia',
+        'South Korea', 'Mexico', 'Indonesia', 'Netherlands', 'Saudi Arabia',
+        'Turkey', 'Switzerland', 'Argentina', 'South Africa', 'Nigeria',
+        'Egypt', 'Pakistan', 'Bangladesh', 'Vietnam', 'Thailand', 'Malaysia',
+        'Singapore', 'Philippines', 'New Zealand', 'Chile', 'Colombia',
+        'Peru', 'Venezuela', 'Ukraine', 'Poland', 'Sweden', 'Norway',
+        'Denmark', 'Finland', 'Italy', 'Spain', 'Portugal', 'Greece',
+        'Ireland', 'Austria', 'Belgium', 'Czech Republic', 'Hungary'
+    ]
+    
+    # Generate realistic inflation rates
+    inflation_rates = []
+    for country in countries:
+        # Different base rates for different economic conditions
+        if country in ['United States', 'Germany', 'Japan', 'Switzerland']:
+            base_rate = np.random.uniform(2.0, 4.0)
+        elif country in ['Turkey', 'Argentina', 'Venezuela']:
+            base_rate = np.random.uniform(15.0, 45.0)
+        elif country in ['United Kingdom', 'Canada', 'Australia']:
+            base_rate = np.random.uniform(3.0, 6.0)
+        elif country in ['India', 'Brazil', 'South Africa']:
+            base_rate = np.random.uniform(4.0, 8.0)
+        else:
+            base_rate = np.random.uniform(2.0, 7.0)
+        
+        inflation_rates.append(round(base_rate, 1))
+    
+    return pd.DataFrame({
+        'Country': countries,
+        'Inflation Rate': inflation_rates,
+        'ISO_Code': ['USA', 'CHN', 'JPN', 'DEU', 'GBR', 'FRA', 'IND', 'BRA', 'CAN', 'AUS', 
+                    'RUS', 'KOR', 'MEX', 'IDN', 'NLD', 'SAU', 'TUR', 'CHE', 'ARG', 'ZAF',
+                    'NGA', 'EGY', 'PAK', 'BGD', 'VNM', 'THA', 'MYS', 'SGP', 'PHL', 'NZL',
+                    'CHL', 'COL', 'PER', 'VEN', 'UKR', 'POL', 'SWE', 'NOR', 'DNK', 'FIN',
+                    'ITA', 'ESP', 'PRT', 'GRC', 'IRL', 'AUT', 'BEL', 'CZE', 'HUN']
+    })
 
 # Generate advanced trading data with OHLC
 def generate_advanced_data(symbol, points=200):
@@ -296,6 +362,9 @@ if 'show_more_news' not in st.session_state:
     st.session_state.show_more_news = False
 
 st.session_state.chart_data = calculate_indicators(st.session_state.chart_data)
+
+# Generate global inflation data
+inflation_data = generate_global_inflation_data()
 
 # Hero Section with Background Image
 st.markdown("""
@@ -393,52 +462,47 @@ with col3:
     st.markdown("### 🌍 Economy")
     st.markdown('<div style="color: #8c9baf; font-size: 0.9rem; margin-bottom: 15px;">Global inflation map ></div>', unsafe_allow_html=True)
     
+    # Inflation Legend
     st.markdown("""
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin: 15px 0;">
-        <div style="background: #1a237e; padding: 8px; border-radius: 4px; text-align: center; color: white; font-size: 0.8rem;">&lt; 0%</div>
-        <div style="background: #283593; padding: 8px; border-radius: 4px; text-align: center; color: white; font-size: 0.8rem;">0-3%</div>
-        <div style="background: #303f9f; padding: 8px; border-radius: 4px; text-align: center; color: white; font-size: 0.8rem;">3-7%</div>
-        <div style="background: #5c6bc0; padding: 8px; border-radius: 4px; text-align: center; color: white; font-size: 0.8rem;">7-12%</div>
-        <div style="background: #7986cb; padding: 8px; border-radius: 4px; text-align: center; color: white; font-size: 0.8rem;">12-25%</div>
-        <div style="background: #9fa8da; padding: 8px; border-radius: 4px; text-align: center; color: #1a237e; font-size: 0.8rem;">&gt; 25%</div>
+    <div class="inflation-legend">
+        <div class="legend-item" style="background: #1a237e; color: white;">&lt; 0%</div>
+        <div class="legend-item" style="background: #283593; color: white;">0-3%</div>
+        <div class="legend-item" style="background: #303f9f; color: white;">3-7%</div>
+        <div class="legend-item" style="background: #5c6bc0; color: white;">7-12%</div>
+        <div class="legend-item" style="background: #7986cb; color: white;">12-25%</div>
+        <div class="legend-item" style="background: #9fa8da; color: #1a237e;">&gt; 25%</div>
     </div>
     """, unsafe_allow_html=True)
     
-    inflation_data = {"USA": 3.2, "UK": 4.1, "Germany": 2.8, "France": 3.5, "Japan": 2.1}
-    for country, rate in inflation_data.items():
-        color = "#26a69a" if rate < 3 else "#ffa726" if rate < 7 else "#ef5350"
-        st.markdown(f"""
-        <div style="display: flex; justify-content: space-between; padding: 8px; background: rgba(42,46,57,0.6); margin: 5px 0; border-radius: 4px;">
-            <span>{country}</span>
-            <span style="color: {color}; font-weight: 600;">{rate}%</span>
-        </div>
-        """, unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# Trading Panel
-st.markdown("### 🎯 Trading Panel")
-tcol1, tcol2, tcol3, tcol4, tcol5, tcol6, tcol7 = st.columns(7)
-
-with tcol1:
-    if st.button("⏸️" if st.session_state.is_live else "▶️", use_container_width=True):
-        st.session_state.is_live = not st.session_state.is_live
-        st.rerun()
-
-with tcol6:
-    if st.button("🟢 BUY", type="primary", use_container_width=True):
-        current_data = st.session_state.chart_data.iloc[-1]
-        st.success(f"✅ BUY 100 {st.session_state.current_symbol} @ ${current_data['close']:.4f}")
-
-with tcol7:
-    if st.button("🔴 SELL", type="secondary", use_container_width=True):
-        current_data = st.session_state.chart_data.iloc[-1]
-        st.error(f"✅ SELL 100 {st.session_state.current_symbol} @ ${current_data['close']:.4f}")
-
-# Footer
-st.markdown("---")
-st.markdown("""
-<div style='text-align: center; color: #6a737d;'>
-    <p>TradeLeap Pro • Look First, Then Leap • Real-time Data • Professional Charts</p>
-    <p>© 2025 TradeLeap. All rights reserved. Not financial advice.</p>
-</div>
-""", unsafe_allow_html=True)
+    # Global Heat Map
+    st.markdown('<div class="heatmap-container">', unsafe_allow_html=True)
+    st.markdown("#### 🌡️ Global Inflation Heat Map")
+    
+    # Create the choropleth map
+    fig = px.choropleth(
+        inflation_data,
+        locations="ISO_Code",
+        color="Inflation Rate",
+        hover_name="Country",
+        hover_data={"Inflation Rate": ":.1f%", "ISO_Code": False},
+        color_continuous_scale="Blues",
+        range_color=[0, 40],  # Cap at 40% for better visualization
+        title="Global Inflation Rates (%)",
+        height=400
+    )
+    
+    fig.update_layout(
+        geo=dict(
+            showframe=False,
+            showcoastlines=True,
+            projection_type='natural earth'
+        ),
+        margin=dict(l=0, r=0, t=30, b=0),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='white'),
+        coloraxis_colorbar=dict(
+            title="Inflation %",
+            thickness=15,
+            len=0.75,
+            yanchor="
